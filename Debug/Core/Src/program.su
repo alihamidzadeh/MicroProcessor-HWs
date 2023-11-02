@@ -1,0 +1,9 @@
+../Core/Src/program.c:40:6:seven_segment_display_decimal	16	static
+../Core/Src/program.c:55:6:seven_segment_deactivate_digits	16	static
+../Core/Src/program.c:62:6:seven_segment_activate_digit	16	static
+../Core/Src/program.c:69:6:seven_segment_set_num	24	static
+../Core/Src/program.c:75:6:seven_segment_refresh	8	static
+../Core/Src/program.c:93:6:programInit	8	static
+../Core/Src/program.c:98:6:programLoop	8	static
+../Core/Src/program.c:135:6:event	32	static
+../Core/Src/program.c:158:6:HAL_GPIO_EXTI_Callback	16	static
