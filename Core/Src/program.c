@@ -59,10 +59,18 @@ void seven_segment_deactivate_digits(void) {
     }
 }
 
+int last_time_on = 0;
 void seven_segment_activate_digit(uint32_t d) {
     if (d < 4) {
-        HAL_GPIO_WritePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin,
-                          GPIO_PIN_RESET);
+		if(d == (2-state) && (HAL_GetTick() - last_time_on) > 40){
+//			HAL_Delay(35);
+			HAL_GPIO_TogglePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin);
+			last_time_on = HAL_GetTick();
+		}
+		else if (d != (2-state)){
+			HAL_GPIO_WritePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin,
+							  GPIO_PIN_RESET);
+		}
     }
 }
 
