@@ -19,10 +19,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-#define NUM_LEN 44
-
-extern uint32_t shift_interval;
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -78,6 +74,35 @@ static void MX_USART2_UART_Init(void);
 //        HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
 //    }
 //}
+uint8_t t;
+uint32_t counter = 0;
+
+void uart_rx_enable_it(void) {
+	HAL_UART_Receive_IT(&huart2, &t, 1);
+}
+
+uint32_t time;
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2) {
+	if (huart2->Instance == USART2) {
+		time = (t - '0');
+		counter = 0;
+		uart_rx_enable_it();
+	}
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim1) {
+	if (htim1->Instance == TIM1) {
+		counter += 1;
+
+		if (counter == time) {
+			HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
+			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);
+			counter = 0;
+		}
+	}
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -113,33 +138,22 @@ int main(void) {
 	/* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim1);
 	/* USER CODE END 2 */
+
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
-	HAL_UART_Transmit(&huart2, "waiting for number\n", 19, 10);
-	uint8_t numbers[NUM_LEN + 1] = { 0 };
-	HAL_UART_Receive(&huart2, numbers, NUM_LEN, HAL_MAX_DELAY);
-	uint8_t out[100];
-	uint32_t len_out = sprintf(out, "number {%s} received", numbers);
-	HAL_UART_Transmit(&huart2, out, len_out, HAL_MAX_DELAY);
-	programInit(numbers);
+//	HAL_UART_Transmit(&huart2, "waiting for number\n", 19, 10);
+//	uint8_t numbers[NUM_LEN + 1] = { 0 };
+//	HAL_UART_Receive(&huart2, numbers, NUM_LEN, HAL_MAX_DELAY);
+//	uint8_t out[100];
+//	uint32_t len_out = sprintf(out, "number {%s} received", numbers);
+//	HAL_UART_Transmit(&huart2, out, len_out, HAL_MAX_DELAY);
+//	programInit(numbers);
+	uart_rx_enable_it();
 
 	while (1) {
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-
-
-		HAL_StatusTypeDef status;
-		uint8_t speed_level;
-		status = HAL_UART_Receive(&huart2,&speed_level, 1, 5);
-		if(status == 0){
-			uint32_t level = (speed_level - '0'); //TODO
-			shift_interval = level * 250;
-			uint8_t out[100];
-			uint32_t len_out = sprintf(out, "speed changed to level {%c}", speed_level);
-			HAL_UART_Transmit(&huart2, out, len_out, HAL_MAX_DELAY);
-		}
-
 
 	}
 	/* USER CODE END 3 */
@@ -294,9 +308,9 @@ static void MX_TIM1_Init(void) {
 
 	/* USER CODE END TIM1_Init 1 */
 	htim1.Instance = TIM1;
-	htim1.Init.Prescaler = 10 - 1;
+	htim1.Init.Prescaler = 100 - 1;
 	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim1.Init.Period = 4800 - 1;
+	htim1.Init.Period = 48000 - 1;
 	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	htim1.Init.RepetitionCounter = 0;
 	htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -404,7 +418,8 @@ static void MX_GPIO_Init(void) {
 					| LD10_Pin | LD8_Pin | LD6_Pin, GPIO_PIN_RESET);
 
 	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2 | GPIO_PIN_4, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_10,
+			GPIO_PIN_RESET);
 
 	/*Configure GPIO pin Output Level */
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4 | GPIO_PIN_6, GPIO_PIN_RESET);
@@ -450,8 +465,8 @@ static void MX_GPIO_Init(void) {
 	GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	/*Configure GPIO pins : PA2 PA4 */
-	GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_4;
+	/*Configure GPIO pins : PA2 PA4 PA10 */
+	GPIO_InitStruct.Pin = GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_10;
 	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
 	GPIO_InitStruct.Pull = GPIO_NOPULL;
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
