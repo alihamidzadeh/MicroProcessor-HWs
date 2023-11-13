@@ -1,205 +1,171 @@
 #include "main.h"
-#include "math.h"
 
 typedef struct {
-    GPIO_TypeDef *port;
-    uint16_t pin;
+	GPIO_TypeDef *port;
+	uint16_t pin;
 } pin_type;
 
+#define NUM_LEN 44
+
+uint32_t shift_interval = 250;
+
 typedef struct {
-    pin_type digit_activators[4];
-    pin_type BCD_input[4];
-    uint32_t digits[4];
-    uint32_t number;
+	pin_type digit_activators[4];
+	pin_type BCD_input[4];
+	int64_t digits[NUM_LEN + 8];
+	char number[NUM_LEN];
+	uint32_t shift_flag;
+	uint32_t shift_counter;
 } seven_segment_type;
 
-typedef struct {
-    pin_type digit[8];
-} led_types;
+seven_segment_type seven_segment = { .digit_activators = { { .port = GPIOB,
+		.pin = GPIO_PIN_2 }, { .port = GPIOB, .pin = GPIO_PIN_0 }, { .port =
+GPIOC, .pin = GPIO_PIN_4 }, { .port = GPIOA, .pin = GPIO_PIN_4 } }, .BCD_input =
+		{ { .port = GPIOC, .pin = GPIO_PIN_6 }, { .port = GPIOD, .pin =
+		GPIO_PIN_13 }, { .port = GPIOD, .pin = GPIO_PIN_9 }, { .port =
+		GPIOB, .pin = GPIO_PIN_13 } }, .digits = { 0, 0, 0, 0 }, .number = 0,
+		.shift_flag = 0, .shift_counter = 0 };
 
-int state = 2; //0,1,2
-int numbers[3] = {1,1,1}; //show value of states
-
-seven_segment_type seven_segment = {
-		.digit_activators={
-			   {.port=GPIOB, .pin=GPIO_PIN_2},
-			   {.port=GPIOB, .pin=GPIO_PIN_0},
-			   {.port=GPIOC, .pin=GPIO_PIN_4},
-			   {.port=GPIOA, .pin=GPIO_PIN_4}},
-
-        .BCD_input={
-        		{.port=GPIOC, .pin=GPIO_PIN_6},
-				{.port=GPIOD, .pin=GPIO_PIN_13},
-				{.port=GPIOD, .pin=GPIO_PIN_9},
-				{.port=GPIOB, .pin=GPIO_PIN_13}},
-        .digits={0, 0, 0, 0},
-        .number = 0};
-
-
-
-void seven_segment_display_decimal(uint32_t n) {
-    if (n < 10) {
-        HAL_GPIO_WritePin(seven_segment.BCD_input[0].port, seven_segment.BCD_input[0].pin,
-                          (n & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(seven_segment.BCD_input[1].port, seven_segment.BCD_input[1].pin,
-                          (n & 2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(seven_segment.BCD_input[2].port, seven_segment.BCD_input[2].pin,
-                          (n & 4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(seven_segment.BCD_input[3].port, seven_segment.BCD_input[3].pin,
-                          (n & 8) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-
-//        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, 1);
-    }
+void seven_segment_display_decimal(uint64_t n) {
+	if (n < 10) {
+		HAL_GPIO_WritePin(seven_segment.BCD_input[0].port,
+				seven_segment.BCD_input[0].pin,
+				(n & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(seven_segment.BCD_input[1].port,
+				seven_segment.BCD_input[1].pin,
+				(n & 2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(seven_segment.BCD_input[2].port,
+				seven_segment.BCD_input[2].pin,
+				(n & 4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+		HAL_GPIO_WritePin(seven_segment.BCD_input[3].port,
+				seven_segment.BCD_input[3].pin,
+				(n & 8) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	}
 }
 
 void seven_segment_deactivate_digits(void) {
-    for (int i = 0; i < 4; ++i) {
-        HAL_GPIO_WritePin(seven_segment.digit_activators[i].port, seven_segment.digit_activators[i].pin,
-                          GPIO_PIN_SET);
-    }
+	for (int i = 0; i < 4; ++i) {
+		HAL_GPIO_WritePin(seven_segment.digit_activators[i].port,
+				seven_segment.digit_activators[i].pin, GPIO_PIN_SET);
+	}
 }
 
-int last_time_on = 0;
+void seven_segment_deactivate_digit(int i) {
+	HAL_GPIO_WritePin(seven_segment.digit_activators[i].port,
+			seven_segment.digit_activators[i].pin, GPIO_PIN_SET);
+}
+
 void seven_segment_activate_digit(uint32_t d) {
-    if (d < 4) {
-		if(d == (2-state) && (HAL_GetTick() - last_time_on) > 40){
-//			HAL_Delay(35);
-			HAL_GPIO_TogglePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin);
-			last_time_on = HAL_GetTick();
-		}
-		else if (d != (2-state)){
-			HAL_GPIO_WritePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin,
-							  GPIO_PIN_RESET);
-		}
-    }
+	if (d < 4) {
+		HAL_GPIO_WritePin(seven_segment.digit_activators[d].port,
+				seven_segment.digit_activators[d].pin, GPIO_PIN_RESET);
+	}
 }
 
-void seven_segment_set_num(int numbers[3]) {
-        for (uint32_t i = 0; i < 3; ++i) {
-            seven_segment.digits[2 - i] = numbers[i];
-    }
+void seven_segment_set_num(uint8_t *n) {
+	if (NUM_LEN > 4) {
+		seven_segment.shift_flag = 1;
+		seven_segment.shift_counter = NUM_LEN + 4;
+
+	}
+	for (uint32_t i = 0; i < 4; ++i) {
+		seven_segment.digits[i] = -1;
+	}
+
+	for (uint32_t j = 0; j < NUM_LEN; ++j) {
+		seven_segment.digits[4 + NUM_LEN - 1 - j] = n[NUM_LEN - 1 - j] - '0';
+	}
+
+	for (uint32_t i = 4 + NUM_LEN; i < 8 + NUM_LEN; ++i) {
+		seven_segment.digits[i] = -1;
+	}
 }
 
 void seven_segment_refresh(void) {
-    static uint32_t state_tmp = 2;
-    static uint32_t last_time_tmp = 0;
-    HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_5);
-    if (HAL_GetTick() - last_time_tmp > 5) {
-        seven_segment_deactivate_digits();
-        seven_segment_activate_digit(state_tmp);
-        seven_segment_display_decimal(seven_segment.digits[state_tmp]);
-        if ((state == 2 && state_tmp == 0) || (state==1 && state_tmp==1) || (state == 0 && state_tmp == 2)){
-        	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, 1);
-        }else{
-        	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, 0);
-        }
-        state_tmp = (state_tmp + 1) % 3;
-        last_time_tmp = HAL_GetTick();
-    }
-}
-
-void programInit() {
-    seven_segment_set_num(numbers);
-    event();
-}
-
-void programLoop() {
-    seven_segment_refresh();
-}
-
-//numbers[3] = {3,2,1} ==> 3: start | 2: length | 3: direction
-//LEDs:
-// ِD3 : E9
-// D4 : E8
-// D6 : E15
-// D8 : E14
-// D10 : E13
-// D9 : E12
-// D7 : E11
-// D5 : E10
-
-led_types leds_ltr= {.digit={
-	   {.port=GPIOE, .pin=GPIO_PIN_9},  //1: D3
-	   {.port=GPIOE, .pin=GPIO_PIN_8},  //2: D4
-	   {.port=GPIOE, .pin=GPIO_PIN_15}, //3: D6
-	   {.port=GPIOE, .pin=GPIO_PIN_14}, //4: D8
-	   {.port=GPIOE, .pin=GPIO_PIN_13}, //5: D10
-	   {.port=GPIOE, .pin=GPIO_PIN_12}, //6: D9
-	   {.port=GPIOE, .pin=GPIO_PIN_11}, //7: D7
-	   {.port=GPIOE, .pin=GPIO_PIN_10}, //8: D5
-}};
-
-led_types leds_rtl= {.digit={
-		{.port=GPIOE, .pin=GPIO_PIN_9},  //1: D3
-		{.port=GPIOE, .pin=GPIO_PIN_10}, //2: D5
-		{.port=GPIOE, .pin=GPIO_PIN_11}, //3: D7
-		{.port=GPIOE, .pin=GPIO_PIN_12}, //4: D9
-		{.port=GPIOE, .pin=GPIO_PIN_13}, //5: D10
-		{.port=GPIOE, .pin=GPIO_PIN_14}, //6: D8
-		{.port=GPIOE, .pin=GPIO_PIN_15}, //7: D6
-		{.port=GPIOE, .pin=GPIO_PIN_8},  //8: D4
-}};
-
-void event(){
-	int a=numbers[2];
-	int b=numbers[1];
-	int c=numbers[0];
-	seven_segment_deactivate_digits();
-
-	for (int i = 1; i < 9; i++)
-		HAL_GPIO_WritePin(leds_ltr.digit[i-1].port, leds_ltr.digit[i-1].pin,0);
-
-	if (c==0){
-		for (int i = a; i <= a+b-1; i++){
-			HAL_GPIO_WritePin(leds_ltr.digit[(i-1)%8].port, leds_ltr.digit[(i-1)%8].pin,1);
+	static uint32_t state = 0;
+	static uint32_t last_time = 0;
+	static uint32_t last_time_shift = 0;
+	static uint32_t st_index = 0;
+	if (HAL_GetTick() - last_time > 5) {
+		seven_segment_deactivate_digits();
+//        seven_segment_activate_digit(state);
+//	   seven_segment_display_decimal(seven_segment.digits[st_index + state]);
+		if (st_index + state == 13) {
+			seven_segment_activate_digit(0);
 		}
-	}else{
-		for (int i = a; i <= a+b-1; i++){
-					HAL_GPIO_WritePin(leds_rtl.digit[(i-1)%8].port, leds_rtl.digit[(i-1)%8].pin,1);
+		if (seven_segment.digits[st_index + state] != -1) {
+			seven_segment_activate_digit(state);
+			seven_segment_display_decimal(
+					seven_segment.digits[st_index + state]);
+		}
+
+		if (seven_segment.shift_flag == 1
+				&& HAL_GetTick() - last_time_shift > shift_interval
+				&& state == 3) {
+			if (seven_segment.shift_counter == 0) {
+				st_index = 0;
+				seven_segment.shift_counter = NUM_LEN + 4;
+			} else {
+				st_index = st_index + 1;
+				seven_segment.shift_counter--;
 			}
+			last_time_shift = HAL_GetTick();
+		}
+
+		state = (state + 1) % 4;
+		last_time = HAL_GetTick();
+
 	}
 
 }
 
+#include <stdint.h>
 
-int last_time2 = 0;
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-		if (GPIO_Pin == GPIO_PIN_0) { //Left button ==> PF4
-			if (HAL_GetTick() - last_time2 > 300){
-			state = state - 1;
-			if(state < 0)
-				state += 3;
-			state = state % 3;
-			last_time2=HAL_GetTick();
-			}
+uint64_t convertBytesToUint64(uint8_t *byteArray) {
+	uint64_t result = 0;
+
+	for (int i = 0; i < NUM_LEN; i++) {
+		result;
+	}
+
+	return result;
+}
+
+void programInit(uint8_t *number) {
+
+	seven_segment_set_num(number);
+//	seven_segment_set_num(12345678987654321);
+}
+
+void programLoop() {
+	seven_segment_refresh();
+
+}
+
+extern UART_HandleTypeDef huart2;
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	static uint32_t last_time = 0;
+	if (HAL_GetTick() - last_time < 100)
+		return;
+
+	if (GPIO_Pin == GPIO_PIN_1) {
+		if (seven_segment.shift_flag == 0) {
+			seven_segment.shift_flag = 1;
+			HAL_UART_Transmit(&huart2, "Resumed", 7, 10);
+
+		} else {
+			seven_segment.shift_flag = 0;
+			HAL_UART_Transmit(&huart2, "Paused", 6, 10);
 		}
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
+	}
+	last_time = HAL_GetTick();
 
-		else if (GPIO_Pin == GPIO_PIN_1){	 //middle button ==> PA1
-			if (HAL_GetTick() - last_time2 > 180){
-				if (state != 0){
-					numbers[state]=(numbers[state] + 1) % 9;
-					if (numbers[state] == 0)
-						numbers[state]++;
-				}else{
-					if (numbers[state] == 1)
-						numbers[state]=0;
-					else
-						numbers[state]=1;
-				}
-				last_time2=HAL_GetTick();
-				event();
-			}
-
-		}
-
-		else if (GPIO_Pin == GPIO_PIN_4) { //Right button ==> PC0
-
-			if (HAL_GetTick() - last_time2 > 300){
-				state = (state + 1) % 3;
-				last_time2=HAL_GetTick();
-				}
-
-			}
-
-		seven_segment_set_num(numbers);
+}
+extern TIM_HandleTypeDef htim1;
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim1) {
+	if (htim1->Instance == TIM1) {
+		programLoop();
+	}
 }

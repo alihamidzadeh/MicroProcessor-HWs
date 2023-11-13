@@ -60,8 +60,8 @@ all: main-build
 main-build: prj_test1.elf secondary-outputs
 
 # Tool invocations
-prj_test1.elf prj_test1.map: $(OBJS) $(USER_OBJS) E:\Term\ 7\MicroProcessor\HWs\prj_test1\STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "prj_test1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Term 7\MicroProcessor\HWs\prj_test1\STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="prj_test1.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+prj_test1.elf prj_test1.map: $(OBJS) $(USER_OBJS) E:\Term\ 7\MicroProcessor\MicroProcessor-HWs-master\MicroProcessor-HWs-master\STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "prj_test1.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Term 7\MicroProcessor\MicroProcessor-HWs-master\MicroProcessor-HWs-master\STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="prj_test1.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
