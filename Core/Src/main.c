@@ -109,7 +109,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2) {
 	if (huart2->Instance == USART2) {
 		if (character != 'z'){
 			input[index++] = character;
-			uart_rx_enable_it();
 		}else{
 			input[index++] = character;
 			input[index++] = '\0';
@@ -134,6 +133,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2) {
 		}
 
 	}
+	uart_rx_enable_it();
+
 }
 
 
