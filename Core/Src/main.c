@@ -27,6 +27,16 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+typedef struct {
+    GPIO_TypeDef *port;
+    uint16_t pin;
+} pin_type;
+
+typedef struct {
+    pin_type digit[8];
+} led_types;
+
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -62,13 +72,6 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-//    if (GPIO_Pin == GPIO_PIN_0) {
-////    	seven_segment_set_num(++seven_segment.number);
-//        HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
-//    }
-//}
-
 uint8_t input[200];
 uint8_t character;
 uint32_t index = 0;
@@ -76,11 +79,32 @@ void uart_rx_enable_it(void) {
 	HAL_UART_Receive_IT(&huart2, &character, 1);
 
 }
+uint8_t password[]={'p','a','s','s','1','2','3'};
+
+int getString(char string[], uint32_t to){
+
+    char substring[1000];
+    uint32_t c = 0;
+    while (c <= to - 2 ){
+        substring[c] = string[2 + c - 1];
+        c++;
+    }
+    substring[c]='\0';
 
 
+	if (strcmp(substring, password)){
+		return 1;
+	}
+
+    return 0;
+}
 
 uint32_t time;
 uint32_t pir_active = 0; //0,1,2
+uint8_t pass[15];
+uint32_t observed = 0;
+uint32_t relay_active = 0;
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2) {
 	if (huart2->Instance == USART2) {
 		if (character != 'z'){
@@ -98,8 +122,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2) {
 			}else if (strcmp(input,'aR-z')){ //reset
 				pir_active = 2;
 			}else{
-				if (input[0]=='a' && input[1]=='r' && input[temp-1]=='z'){
-
+				if (input[0]=='a' && input[1]=='r' && input[temp-1]=='z'){ //Deactive
+					if (getString(input, temp-2)==1){
+						pir_active = 0;
+						relay_active = 0;
+					}
 				}else{
 					HAL_UART_Transmit(&huart2, "Invalid Packet\n", 15, HAL_MAX_DELAY);
 				}
@@ -109,26 +136,53 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart2) {
 	}
 }
 
-uint8_t pass[15];
-uint32_t observed = 0;
+
+
+
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if (GPIO_Pin == GPIO_PIN_0)
     {
     	observed = 1;
-    	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, observed);
+    	relay_active = 1;
+    	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, relay_active);
+
     }
 }
 
+led_types leds= {.digit={
+	   {.port=GPIOE, .pin=GPIO_PIN_9},  //1: D3
+	   {.port=GPIOE, .pin=GPIO_PIN_8},  //2: D4
+	   {.port=GPIOE, .pin=GPIO_PIN_15}, //3: D6
+	   {.port=GPIOE, .pin=GPIO_PIN_14}, //4: D8
+	   {.port=GPIOE, .pin=GPIO_PIN_13}, //5: D10
+	   {.port=GPIOE, .pin=GPIO_PIN_12}, //6: D9
+	   {.port=GPIOE, .pin=GPIO_PIN_11}, //7: D7
+	   {.port=GPIOE, .pin=GPIO_PIN_10}, //8: D5
+}};
 
+void turn_off_leds(){
+	for (int i = 1; i < 9; i++)
+			HAL_GPIO_WritePin(leds.digit[i-1].port, leds.digit[i-1].pin,0);
+}
+uint32_t time_count = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim1) {
 	if (htim1->Instance == TIM1) {
-		counter += 1;
-
-		if (counter == time) {
-			HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
-			HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);
-			counter = 0;
+		if(pir_active == 0){
+			turn_off_leds();
+		}
+		else if (pir_active == 1 && observed == 1){
+			for (int i = 1; i < 9; i++)
+					HAL_GPIO_TogglePin(leds.digit[i-1].port, leds.digit[i-1].pin);
+		}
+		else if (pir_active == 1 && observed == 0){
+			time_count +=1;
+			if(time_count == 10){
+				for (int i = 1; i < 9; i++)
+					HAL_GPIO_TogglePin(leds.digit[i-1].port, leds.digit[i-1].pin);
+				time_count = 0;
+			}
 		}
 	}
 }
@@ -165,7 +219,7 @@ int main(void)
   MX_TIM1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-	HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
