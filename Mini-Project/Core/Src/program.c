@@ -1,5 +1,5 @@
 #include "main.h"
-#include "math.h"
+#include <math.h>
 
 
 typedef struct {
@@ -20,6 +20,84 @@ typedef struct {
 
 extern ADC_HandleTypeDef hadc1;
 extern UART_HandleTypeDef huart3;
+extern TIM_HandleTypeDef htim3;
+
+
+
+TIM_HandleTypeDef *pwm_timer_buzzer = &htim3; // Point to PWM timer configured in CubeMX
+uint32_t pwm_channel_buzz = TIM_CHANNEL_1;  // Specify configured PWM channel
+
+void PWM_Change_Tone(uint32_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000), volume (0 - 1000)
+{
+  if (pwm_freq == 0 || pwm_freq > 20000)
+  {
+    __HAL_TIM_SET_COMPARE(pwm_timer_buzzer, pwm_channel_buzz, 0);
+  }
+  else
+  {
+    const uint32_t internal_clock_freq = HAL_RCC_GetSysClockFreq();
+	const uint16_t prescaler = 1 + internal_clock_freq / pwm_freq / 60000;
+    const uint32_t timer_clock = internal_clock_freq / prescaler;
+    const uint32_t period_cycles = timer_clock / pwm_freq;
+    const uint32_t pulse_width = volume * period_cycles / 1000 / 2;
+
+    pwm_timer->Instance->PSC = prescaler - 1;
+    pwm_timer->Instance->ARR = period_cycles - 1;
+    pwm_timer->Instance->EGR = TIM_EGR_UG;
+    __HAL_TIM_SET_COMPARE(pwm_timer_buzzer, pwm_channel_buzz, pulse_width); // pwm_timer->Instance->CCR2 = pulse_width;
+  }
+}
+
+void sin_signal(int counter){
+	int max = 10000;
+	uint32_t x = (uint32_t *) (max * sin(counter * (M_PI  / 180)) + 10000);
+	PWM_Change_Tone(x, 1000);
+//	printf("%f   %d\n", x, counter);
+
+}
+
+void square_signal(int counter){
+	if (counter >= 96){
+		counter = counter % 96;
+
+	}
+
+	if (counter < 48) {
+		uint32_t x = 20000;
+		PWM_Change_Tone(x, 1000);
+
+//		printf("%f   %d\n", x, counter);
+	}
+	else if (counter >= 48 && counter < 96){
+		uint32_t x = 5000;
+		PWM_Change_Tone(x, 1000);
+
+//		printf("%f   %d\n", x, counter);
+	}
+
+}
+
+void triangle_signal(int counter){
+	if (counter >= 96){
+		counter = counter % 96;
+	}
+
+	if (counter < 80) {
+		uint32_t x = 250 * counter;
+		PWM_Change_Tone(x, 1000);
+
+//		printf("%f   %d\n", x, counter);
+	}
+	else if (counter >= 80 && counter < 96){
+		uint32_t x = 0;
+		PWM_Change_Tone(x, 1000);
+
+//		printf("%f   %d\n", x, counter);
+	}
+
+}
+
+
 
 int state = 0; //0,1,2
 int numbers[4] = {1,1,1,1}; //show value of states
@@ -197,7 +275,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		}
 
 		else if (GPIO_Pin == GPIO_PIN_4) { //Right button ==> PC0
-
 			if (HAL_GetTick() - last_time2 > 300){
 				state = (state + 1) % 3;
 				last_time2=HAL_GetTick();
@@ -224,10 +301,26 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	}
 
 }
+uint64_t counter = 0;
+int buzz_type = 1;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if (htim->Instance == TIM2) {
+		if(buzz_type == 1){
+			triangle_signal(counter);
+		}
+		else if(buzz_type == 2){
+			square_signal(counter);
+		}
+		else if(buzz_type == 3){
+			sin_signal(counter);
+		}
+		counter = counter + 1;
+		if(counter > 5000){
+			counter = 0;
+		}
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
+
 		HAL_ADC_Start_IT(&hadc1);
 	}
 }
