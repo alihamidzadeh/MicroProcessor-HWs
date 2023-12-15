@@ -121,14 +121,10 @@ seven_segment_type seven_segment = {
 
 void seven_segment_display_decimal(uint32_t n) {
     if (n < 10) {
-        HAL_GPIO_WritePin(seven_segment.BCD_input[0].port, seven_segment.BCD_input[0].pin,
-                          (n & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(seven_segment.BCD_input[1].port, seven_segment.BCD_input[1].pin,
-                          (n & 2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(seven_segment.BCD_input[2].port, seven_segment.BCD_input[2].pin,
-                          (n & 4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(seven_segment.BCD_input[3].port, seven_segment.BCD_input[3].pin,
-                          (n & 8) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(seven_segment.BCD_input[0].port, seven_segment.BCD_input[0].pin, (n & 1) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(seven_segment.BCD_input[1].port, seven_segment.BCD_input[1].pin, (n & 2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(seven_segment.BCD_input[2].port, seven_segment.BCD_input[2].pin, (n & 4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(seven_segment.BCD_input[3].port, seven_segment.BCD_input[3].pin, (n & 8) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
 //        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, 1);
     }
@@ -136,8 +132,7 @@ void seven_segment_display_decimal(uint32_t n) {
 
 void seven_segment_deactivate_digits(void) {
     for (int i = 0; i < 4; ++i) {
-        HAL_GPIO_WritePin(seven_segment.digit_activators[i].port, seven_segment.digit_activators[i].pin,
-                          GPIO_PIN_SET);
+        HAL_GPIO_WritePin(seven_segment.digit_activators[i].port, seven_segment.digit_activators[i].pin, GPIO_PIN_SET);
     }
 }
 
@@ -150,15 +145,14 @@ void seven_segment_activate_digit(uint32_t d) {
 //			last_time_on = HAL_GetTick();
 		}
 		else if (d != (2-state)){
-			HAL_GPIO_WritePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin,
-							  GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin, GPIO_PIN_RESET);
 		}
     }
 }
 
 void seven_segment_set_num(int numbers[3]) {
         for (uint32_t i = 0; i < 3; ++i) {
-            seven_segment.digits[2 - i] = numbers[i];
+            seven_segment.digits[i] = numbers[i];
     }
 }
 
@@ -170,7 +164,7 @@ void seven_segment_refresh(void) {
         seven_segment_deactivate_digits();
         seven_segment_activate_digit(state_tmp);
         seven_segment_display_decimal(seven_segment.digits[state_tmp]);
-        if ((state == 2 && state_tmp == 0) || (state==1 && state_tmp==1) || (state == 0 && state_tmp == 2)){
+        if ((state == 2 && state_tmp == 2) || (state==1 && state_tmp==1) || (state == 0 && state_tmp == 0)){
         	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, 1);
         }else{
         	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, 0);
@@ -228,54 +222,57 @@ void event(){
 	int c=numbers[0];
 	seven_segment_deactivate_digits();
 
-	for (int i = 1; i < 9; i++)
-		HAL_GPIO_WritePin(leds_ltr.digit[i-1].port, leds_ltr.digit[i-1].pin,0);
-
-	if (c==0){
-		for (int i = a; i <= a+b-1; i++){
-			HAL_GPIO_WritePin(leds_ltr.digit[(i-1)%8].port, leds_ltr.digit[(i-1)%8].pin,1);
-		}
-	}else{
-		for (int i = a; i <= a+b-1; i++){
-					HAL_GPIO_WritePin(leds_rtl.digit[(i-1)%8].port, leds_rtl.digit[(i-1)%8].pin,1);
-			}
-	}
+	//TODO: write event there
 
 }
 
 
 int last_time2 = 0;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-		if (GPIO_Pin == GPIO_PIN_0) { //Left button ==> PF4
-			if (HAL_GetTick() - last_time2 > 300){
-			state = state - 1;
-			if(state < 0)
-				state += 3;
-			state = state % 3;
-			last_time2=HAL_GetTick();
+		if (GPIO_Pin == GPIO_PIN_4) { //Left button ==> PF4
+			if (HAL_GetTick() - last_time2 > 400){
+				if (state == 0){
+					numbers[state]=(numbers[state] - 1);
+					if (numbers[state] == -1)
+						numbers[state]=9;
+
+				}else if (state == 1){
+					numbers[state]=(numbers[state] - 1);
+						if (numbers[state] == 0)
+							numbers[state]=4;
+
+				}else if (state == 2){
+					numbers[state]=(numbers[state] - 1);
+						if (numbers[state] == 0)
+							numbers[state]=3;
+				}
+				last_time2=HAL_GetTick();
 			}
 		}
 
 		else if (GPIO_Pin == GPIO_PIN_1){	 //middle button ==> PA1
-			if (HAL_GetTick() - last_time2 > 180){
-				if (state != 0){
-					numbers[state]=(numbers[state] + 1) % 9;
+			if (HAL_GetTick() - last_time2 > 400){
+				if (state == 0){
+					numbers[state]=(numbers[state] + 1) % 10;
+
+				}else if (state == 1){
+					numbers[state]=(numbers[state] + 1) % 5;
 					if (numbers[state] == 0)
 						numbers[state]++;
-				}else{
-					if (numbers[state] == 1)
-						numbers[state]=0;
-					else
-						numbers[state]=1;
+
+				}else if (state == 2){
+					numbers[state]=(numbers[state] + 1) % 4;
+					if (numbers[state] == 0)
+						numbers[state]++;
 				}
+
 				last_time2=HAL_GetTick();
 				event();
 			}
-
 		}
 
-		else if (GPIO_Pin == GPIO_PIN_4) { //Right button ==> PC0
-			if (HAL_GetTick() - last_time2 > 300){
+		else if (GPIO_Pin == GPIO_PIN_0) { //Right button ==> PC0
+			if (HAL_GetTick() - last_time2 > 400){
 				state = (state + 1) % 3;
 				last_time2=HAL_GetTick();
 				}
@@ -303,26 +300,26 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 }
 
 //Play Warn
-uint64_t counter = 0;
-int buzz_type = 1;
+//uint64_t counter = 0;
+//int buzz_type = 1;
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == TIM2) {
-		if(buzz_type == 1){
-			triangle_signal(counter);
-		}
-		else if(buzz_type == 2){
-			square_signal(counter);
-		}
-		else if(buzz_type == 3){
-			sin_signal(counter);
-		}
-		counter = counter + 1;
-		if(counter > 5000){
-			counter = 0;
-		}
-		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
-
-		HAL_ADC_Start_IT(&hadc1);
-	}
-}
+//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+//	if (htim->Instance == TIM2) {
+//		if(buzz_type == 1){
+//			triangle_signal(counter);
+//		}
+//		else if(buzz_type == 2){
+//			square_signal(counter);
+//		}
+//		else if(buzz_type == 3){
+//			sin_signal(counter);
+//		}
+//		counter = counter + 1;
+//		if(counter > 5000){
+//			counter = 0;
+//		}
+//		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
+//
+//		HAL_ADC_Start_IT(&hadc1);
+//	}
+//}
