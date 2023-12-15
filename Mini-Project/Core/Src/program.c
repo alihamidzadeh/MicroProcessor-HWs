@@ -98,9 +98,8 @@ void triangle_signal(int counter){
 }
 
 
-
-int state = 0; //0,1,2
-int numbers[4] = {1,1,1,1}; //show value of states
+int state = 1; //0,1,2
+int numbers[4] = {1,2,3,4}; //show value of states
 
 seven_segment_type seven_segment = {
 		.digit_activators={
@@ -125,7 +124,6 @@ void seven_segment_display_decimal(uint32_t n) {
         HAL_GPIO_WritePin(seven_segment.BCD_input[1].port, seven_segment.BCD_input[1].pin, (n & 2) ? GPIO_PIN_SET : GPIO_PIN_RESET);
         HAL_GPIO_WritePin(seven_segment.BCD_input[2].port, seven_segment.BCD_input[2].pin, (n & 4) ? GPIO_PIN_SET : GPIO_PIN_RESET);
         HAL_GPIO_WritePin(seven_segment.BCD_input[3].port, seven_segment.BCD_input[3].pin, (n & 8) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-
 //        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, 1);
     }
 }
@@ -139,27 +137,36 @@ void seven_segment_deactivate_digits(void) {
 int last_time_on = 0;
 void seven_segment_activate_digit(uint32_t d) {
     if (d < 4) {
-		if(d == (2-state)) {//&& (HAL_GetTick() - last_time_on) > 40){
+//		if(d == (2-state)) {//&& (HAL_GetTick() - last_time_on) > 40){
+////			HAL_Delay(35);
+//			HAL_GPIO_TogglePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin);
+////			last_time_on = HAL_GetTick();
+//		}
+//		else if (d != (2-state)){
+//			HAL_GPIO_WritePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin, GPIO_PIN_RESET);
+//		}
+
+		if(d == state && (HAL_GetTick() - last_time_on) > 40){
 //			HAL_Delay(35);
 			HAL_GPIO_TogglePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin);
-//			last_time_on = HAL_GetTick();
+			last_time_on = HAL_GetTick();
 		}
-		else if (d != (2-state)){
+		else if (d != state){
 			HAL_GPIO_WritePin(seven_segment.digit_activators[d].port, seven_segment.digit_activators[d].pin, GPIO_PIN_RESET);
 		}
     }
 }
 
-void seven_segment_set_num(int numbers[3]) {
-        for (uint32_t i = 0; i < 3; ++i) {
+void seven_segment_set_num(int numbers[4]) {
+        for (uint32_t i = 0; i <= 3; ++i) {
             seven_segment.digits[i] = numbers[i];
-    }
+		}
 }
 
 void seven_segment_refresh(void) {
-    static uint32_t state_tmp = 2;
+    static uint32_t state_tmp = 0;
     static uint32_t last_time_tmp = 0;
-    HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_5);
+    //HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_5);
     if (HAL_GetTick() - last_time_tmp > 5) {
         seven_segment_deactivate_digits();
         seven_segment_activate_digit(state_tmp);
@@ -229,7 +236,7 @@ void event(){
 
 int last_time2 = 0;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-		if (GPIO_Pin == GPIO_PIN_4) { //Left button ==> PF4
+		if (GPIO_Pin == GPIO_PIN_4) { //Left button (Decrease Number) ==> PF4
 			if (HAL_GetTick() - last_time2 > 400){
 				if (state == 0){
 					numbers[state]=(numbers[state] - 1);
@@ -247,10 +254,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 							numbers[state]=3;
 				}
 				last_time2=HAL_GetTick();
+				event();
 			}
 		}
 
-		else if (GPIO_Pin == GPIO_PIN_1){	 //middle button ==> PA1
+		else if (GPIO_Pin == GPIO_PIN_1){	 //middle button (Increase Number) ==> PA1
 			if (HAL_GetTick() - last_time2 > 400){
 				if (state == 0){
 					numbers[state]=(numbers[state] + 1) % 10;
@@ -265,20 +273,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 					if (numbers[state] == 0)
 						numbers[state]++;
 				}
-
 				last_time2=HAL_GetTick();
 				event();
 			}
 		}
 
-		else if (GPIO_Pin == GPIO_PIN_0) { //Right button ==> PC0
+		else if (GPIO_Pin == GPIO_PIN_0) { //Right button (Next Number)==> PC0
 			if (HAL_GetTick() - last_time2 > 400){
 				state = (state + 1) % 3;
 				last_time2=HAL_GetTick();
 				}
-
 			}
-
 		seven_segment_set_num(numbers);
 }
 
