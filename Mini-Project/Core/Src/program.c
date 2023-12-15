@@ -41,16 +41,16 @@ void PWM_Change_Tone(uint32_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000)
     const uint32_t period_cycles = timer_clock / pwm_freq;
     const uint32_t pulse_width = volume * period_cycles / 1000 / 2;
 
-    pwm_timer->Instance->PSC = prescaler - 1;
-    pwm_timer->Instance->ARR = period_cycles - 1;
-    pwm_timer->Instance->EGR = TIM_EGR_UG;
+    pwm_timer_buzzer->Instance->PSC = prescaler - 1;
+    pwm_timer_buzzer->Instance->ARR = period_cycles - 1;
+    pwm_timer_buzzer->Instance->EGR = TIM_EGR_UG;
     __HAL_TIM_SET_COMPARE(pwm_timer_buzzer, pwm_channel_buzz, pulse_width); // pwm_timer->Instance->CCR2 = pulse_width;
   }
 }
 
 void sin_signal(int counter){
 	int max = 10000;
-	uint32_t x = (uint32_t *) (max * sin(counter * (M_PI  / 180)) + 10000);
+	uint32_t x = (uint32_t) (max * sin(counter * (M_PI  / 180)) + 10000);
 	PWM_Change_Tone(x, 1000);
 //	printf("%f   %d\n", x, counter);
 
@@ -301,6 +301,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	}
 
 }
+
+//Play Warn
 uint64_t counter = 0;
 int buzz_type = 1;
 
