@@ -10,5 +10,7 @@
 ../Core/Src/program.c:184:6:programInit	8	static
 ../Core/Src/program.c:189:6:programLoop	8	static
 ../Core/Src/program.c:226:6:event	24	static
-../Core/Src/program.c:238:6:HAL_GPIO_EXTI_Callback	16	static
-../Core/Src/program.c:290:6:HAL_ADC_ConvCpltCallback	136	static
+../Core/Src/program.c:236:6:setSegment	24	static
+../Core/Src/program.c:264:6:setNumber	32	static
+../Core/Src/program.c:284:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/program.c:336:6:HAL_ADC_ConvCpltCallback	136	static

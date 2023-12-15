@@ -29,23 +29,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  12 .ARM.attributes 00000030  00000000  00000000  00020248  2**0
                   CONTENTS, READONLY
- 13 .debug_info   0001d5b2  00000000  00000000  00020278  2**0
+ 13 .debug_info   0001d659  00000000  00000000  00020278  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_abbrev 00003526  00000000  00000000  0003d82a  2**0
+ 14 .debug_abbrev 00003539  00000000  00000000  0003d8d1  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_aranges 000017a0  00000000  00000000  00040d50  2**3
+ 15 .debug_aranges 000017b0  00000000  00000000  00040e10  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_ranges 00001680  00000000  00000000  000424f0  2**3
+ 16 .debug_ranges 00001690  00000000  00000000  000425c0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  00021573  00000000  00000000  00043b70  2**0
+ 17 .debug_macro  00021573  00000000  00000000  00043c50  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   0001e1a2  00000000  00000000  000650e3  2**0
+ 18 .debug_line   0001e23e  00000000  00000000  000651c3  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000c8a24  00000000  00000000  00083285  2**0
+ 19 .debug_str    000c8a2f  00000000  00000000  00083401  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000050  00000000  00000000  0014bca9  2**0
+ 20 .comment      00000050  00000000  00000000  0014be30  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  00007b08  00000000  00000000  0014bcfc  2**2
+ 21 .debug_frame  00007b50  00000000  00000000  0014be80  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -2784,7 +2784,9 @@ void event(){
  8001718:	20000004 	.word	0x20000004
 
 0800171c <HAL_GPIO_EXTI_Callback>:
+	}
 
+}
 
 int last_time2 = 0;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){

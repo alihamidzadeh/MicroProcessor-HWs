@@ -128,6 +128,13 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim3);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
 
+// Test
+//  setSegment(0,9,1);
+//  setSegment(1,1,1);
+//  setSegment(2,9,1);
+//  setSegment(3,7,1);
+//  setNumber(201);
+
   while (1)
   {
     /* USER CODE END WHILE */
@@ -140,6 +147,7 @@ int main(void)
 //		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_9, 1);  //C
 //		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, 0);  //D
 		programLoop();
+
 //		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, 1);
 //		HAL_Delay(3000);
 //		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, 1);

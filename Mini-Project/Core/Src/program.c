@@ -233,6 +233,52 @@ void event(){
 
 }
 
+void setSegment(int state, int digit, int flag){
+//(flag==0) ==> for first part, show 1 number with 4 digits
+//(flag==1) ==> for second part, show 4 number with 1 digits (has limit)
+
+	if (flag == 1){
+		if (state == 0){
+			if (digit >= 0 && digit <= 9){
+				numbers[state]=digit;
+			}
+		}else if (state == 1){
+			if (digit >= 1 && digit <= 4){
+				numbers[state]=digit;
+			}
+		}else if (state == 2){
+			if (digit >= 1 && digit <= 3){
+				numbers[state]=digit;
+			}
+		}else if (state == 3){
+			if (digit >= 0 && digit <= 9){
+				numbers[state]=digit;
+			}
+		}
+	}else{
+		numbers[state]=digit;
+	}
+	seven_segment_set_num(numbers);
+}
+
+void setNumber(int number){
+	int a = 0, b = 0, c = 0, d = 0;
+	if (number <= 9999 && number >= 0){
+		a = number % 10;
+		number /= 10;
+		b = number % 10;
+		number /= 10;
+		c = number % 10;
+		number /= 10;
+		d = number % 10;
+
+		setSegment(3,a,0);
+		setSegment(2,b,0);
+		setSegment(1,c,0);
+		setSegment(0,d,0);
+	}
+
+}
 
 int last_time2 = 0;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
