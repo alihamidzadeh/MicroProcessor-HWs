@@ -19,16 +19,23 @@ typedef struct {
 } led_types;
 
 extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc3;
 extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim1;
 
 
+int state = 0; //0,1,2
+int numbers[4] = {1,1,1,0}; //show value of states
 
-TIM_HandleTypeDef *pwm_timer_buzzer = &htim3; // Point to PWM timer configured in CubeMX
+
+TIM_HandleTypeDef *pwm_timer_buzzer = &htim1; // Point to PWM timer configured in CubeMX
 uint32_t pwm_channel_buzz = TIM_CHANNEL_1;  // Specify configured PWM channel
 
 void PWM_Change_Tone(uint32_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000), volume (0 - 1000)
 {
+
+  volume=5;
   if (pwm_freq == 0 || pwm_freq > 20000)
   {
     __HAL_TIM_SET_COMPARE(pwm_timer_buzzer, pwm_channel_buzz, 0);
@@ -46,6 +53,58 @@ void PWM_Change_Tone(uint32_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000)
     pwm_timer_buzzer->Instance->EGR = TIM_EGR_UG;
     __HAL_TIM_SET_COMPARE(pwm_timer_buzzer, pwm_channel_buzz, pulse_width); // pwm_timer->Instance->CCR2 = pulse_width;
   }
+}
+
+int alert = 1;
+uint32_t LEDs_power;
+
+void turn_on_leds(){
+
+	// Orange(yellow)1 PB4
+
+	// Green 2 PC7
+
+	// white 3 PE4
+
+	// red 4 PC9
+	if(alert == 1){
+//		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+//		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
+//		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
+//		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 1);
+
+		if(numbers[1] == 1){
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+		}else if(numbers[1] == 2){
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
+		}else if(numbers[1] == 3){
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
+		}else if(numbers[1] == 4){
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, LEDs_power);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
+			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 1);
+		}
+	}
 }
 
 void sin_signal(int counter){
@@ -98,8 +157,7 @@ void triangle_signal(int counter){
 }
 
 
-int state = 1; //0,1,2
-int numbers[4] = {1,2,3,4}; //show value of states
+
 
 seven_segment_type seven_segment = {
 		.digit_activators={
@@ -157,9 +215,9 @@ void seven_segment_activate_digit(uint32_t d) {
     }
 }
 
-void seven_segment_set_num(int numbers[4]) {
+void seven_segment_set_num(int num[4]) {
         for (uint32_t i = 0; i <= 3; ++i) {
-            seven_segment.digits[i] = numbers[i];
+            seven_segment.digits[i] = num[i];
 		}
 }
 
@@ -272,10 +330,12 @@ void setNumber(int number){
 		number /= 10;
 		d = number % 10;
 
-		setSegment(3,a,0);
-		setSegment(2,b,0);
-		setSegment(1,c,0);
-		setSegment(0,d,0);
+//		setSegment(3,a,0);
+//		setSegment(2,b,0);
+//		setSegment(1,c,0);
+//		setSegment(0,d,0);
+		int numbers2[4]={d,c,b,a};
+		seven_segment_set_num(numbers2);
 	}
 
 }
@@ -333,44 +393,101 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		seven_segment_set_num(numbers);
 }
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
-	if (hadc->Instance == ADC1) {
-//		  HAL_UART_Transmit(&huart3,"TTT",3,1000);
 
-		int x = HAL_ADC_GetValue(&hadc1);
+int currentBR;
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+	if (hadc->Instance == ADC3) {
+//	  HAL_UART_Transmit(&huart3,"TTT",3,1000);
+
+		int x = HAL_ADC_GetValue(&hadc3);
 		float fx = ((float) x * 100 / 4095);
 		unsigned char data[100];
-		int n = sprintf(data, "%d  %.4f\n", x, fx);
+		int n = sprintf(data, "volume: %d  %.4f\n", x, fx);
 		HAL_UART_Transmit(&huart3, data, n, 1000);
 //		HAL_Delay(10);
 	}
-	else if(hadc->Instance == ADC2){
+	else if(hadc->Instance == ADC1){
+//		  HAL_UART_Transmit(&huart3,"TTT",3,1000);
+		int x = HAL_ADC_GetValue(&hadc1);
+		currentBR=x;
+		float fx = ((float) x * 100 / 3800);
+		unsigned char data[100];
 
+		int n = sprintf(data, "LDR: %d  %.2f%%\n", x, fx);
+		HAL_UART_Transmit(&huart3, data, n, 1000);
+//		HAL_Delay(10);
+		checkBrightness();
 	}
 
 }
 
 //Play Warn
-//uint64_t counter = 0;
-//int buzz_type = 1;
+uint64_t counter = 0;
+int buzz_type = 2;
 
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-//	if (htim->Instance == TIM2) {
-//		if(buzz_type == 1){
-//			triangle_signal(counter);
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	if (htim->Instance == TIM2) {
+		counter = counter + 1;
+		buzz_type = numbers[2];
+		if(counter > 5000){
+			counter = 0;
+		}
+//	    HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
+
+		HAL_ADC_Start_IT(&hadc1);
+		HAL_ADC_Start_IT(&hadc3);
+		checkBrightness();
+		LEDs_power = numbers[0]*10;
+//		if (LEDs_power > 0){
+//			LEDs_power-=5;
 //		}
-//		else if(buzz_type == 2){
-//			square_signal(counter);
-//		}
-//		else if(buzz_type == 3){
-//			sin_signal(counter);
-//		}
-//		counter = counter + 1;
-//		if(counter > 5000){
-//			counter = 0;
-//		}
-//		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_15);
-//
-//		HAL_ADC_Start_IT(&hadc1);
-//	}
-//}
+	}
+}
+
+void playAlarm(){
+	if (alert==1){
+		if(buzz_type == 1){
+			triangle_signal(counter);
+		}
+		else if(buzz_type == 2){
+			square_signal(counter);
+		}
+		else if(buzz_type == 3){
+			sin_signal(counter);
+		}
+	}
+}
+
+int warnCount=0;
+int threshold=500;
+
+void checkBrightness(){
+	if (currentBR >= threshold){
+		setNumber(currentBR);
+		if(alert == 0){
+			warnCount=(warnCount+1)%10;
+			alert = 1;
+		}
+		turn_on_leds();
+		playAlarm();
+		numbers[3]=warnCount;
+	}else{
+		alert=0;
+		seven_segment_set_num(numbers);
+		PWM_Change_Tone(0, 0);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 0);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 0);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 0);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0);
+	}
+}
+
+
+
+void displayBR(){
+	setNumber(currentBR);
+}
