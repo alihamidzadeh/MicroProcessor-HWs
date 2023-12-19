@@ -23,11 +23,13 @@ extern ADC_HandleTypeDef hadc3;
 extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim1;
+extern TIM_HandleTypeDef htim4;
 
 
 int state = 0; //0,1,2
 int numbers[4] = {1,1,1,0}; //show value of states
-
+int mledlight[20] = {-90, -80, -70, -60, -50, -40, -30, -20, -10, 0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
+int mthreshold[15] = {0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280};
 
 TIM_HandleTypeDef *pwm_timer_buzzer = &htim1; // Point to PWM timer configured in CubeMX
 uint32_t pwm_channel_buzz = TIM_CHANNEL_1;  // Specify configured PWM channel
@@ -35,7 +37,7 @@ uint32_t pwm_channel_buzz = TIM_CHANNEL_1;  // Specify configured PWM channel
 void PWM_Change_Tone(uint32_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000), volume (0 - 1000)
 {
 
-  volume=5;
+//  volume=5;
   if (pwm_freq == 0 || pwm_freq > 20000)
   {
     __HAL_TIM_SET_COMPARE(pwm_timer_buzzer, pwm_channel_buzz, 0);
@@ -55,7 +57,7 @@ void PWM_Change_Tone(uint32_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000)
   }
 }
 
-int alert = 1;
+int alert = 0;
 uint32_t LEDs_power;
 
 void turn_on_leds(){
@@ -67,7 +69,7 @@ void turn_on_leds(){
 	// white 3 PE4
 
 	// red 4 PC9
-	if(alert == 1){
+	if(alert == 0){
 //		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
 //		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
 //		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
@@ -76,20 +78,20 @@ void turn_on_leds(){
 		if(numbers[1] == 1){
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, 0);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
 		}else if(numbers[1] == 2){
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, LEDs_power);
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, 0);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
 		}else if(numbers[1] == 3){
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, LEDs_power);
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, LEDs_power);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
@@ -97,7 +99,7 @@ void turn_on_leds(){
 		}else if(numbers[1] == 4){
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, LEDs_power);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, LEDs_power);
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, LEDs_power);
+			__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, LEDs_power);
 			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, LEDs_power);
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
 			HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
@@ -107,6 +109,23 @@ void turn_on_leds(){
 	}
 }
 
+void turn_off_leds(){
+
+	// Orange(yellow)1 PB4
+	// Green 2 PC7
+	// white 3 PE4
+	// red 4 PC9
+
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
+		__HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, 0);
+		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 0);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 0);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 0);
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0);
+}
 void sin_signal(int counter){
 	int max = 10000;
 	uint32_t x = (uint32_t) (max * sin(counter * (M_PI  / 180)) + 10000);
@@ -395,12 +414,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 
 
 int currentBR;
+int currentVolume;
+int threshhold_plus = 0;
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	if (hadc->Instance == ADC3) {
 //	  HAL_UART_Transmit(&huart3,"TTT",3,1000);
 
 		int x = HAL_ADC_GetValue(&hadc3);
 		float fx = ((float) x * 100 / 4095);
+		currentVolume = (int) fx;
 		unsigned char data[100];
 		int n = sprintf(data, "volume: %d  %.4f\n", x, fx);
 		HAL_UART_Transmit(&huart3, data, n, 1000);
@@ -413,7 +435,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 		float fx = ((float) x * 100 / 3800);
 		unsigned char data[100];
 
-		int n = sprintf(data, "LDR: %d  %.2f%%\n", x, fx);
+		int n = sprintf(data, "LDR: %d  %.2f \n", x, fx);
 		HAL_UART_Transmit(&huart3, data, n, 1000);
 //		HAL_Delay(10);
 		checkBrightness();
@@ -437,22 +459,36 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		HAL_ADC_Start_IT(&hadc1);
 		HAL_ADC_Start_IT(&hadc3);
 		checkBrightness();
-		LEDs_power = numbers[0]*10;
-//		if (LEDs_power > 0){
-//			LEDs_power-=5;
-//		}
+		int LEDLight = (int) numbers[0]*100 + mledlight[(currentVolume/5)-1];
+
+		// test
+//		unsigned char data[100];
+//		int n = sprintf(data, "LEDLIGHT: %d taghsim 5 %d \n", LEDLight, (currentVolume/7));
+//		HAL_UART_Transmit(&huart3, data, n, 1000);
+		//
+	    threshhold_plus = (int) mthreshold[(currentVolume/7)-1];
+
+		unsigned char data[100];
+		int n = sprintf(data, "Treshhold plus: %d taghsim 5 %d \n", threshhold_plus, (currentVolume/7));
+		HAL_UART_Transmit(&huart3, data, n, 1000);
+		if(LEDLight < 0){
+			LEDs_power = 0;
+		}
+		else{
+			LEDs_power = LEDLight;
+		}
 	}
 }
 
 void playAlarm(){
 	if (alert==1){
-		if(buzz_type == 1){
+		if(buzz_type == 3){
 			triangle_signal(counter);
 		}
 		else if(buzz_type == 2){
 			square_signal(counter);
 		}
-		else if(buzz_type == 3){
+		else if(buzz_type == 1){
 			sin_signal(counter);
 		}
 	}
@@ -467,26 +503,24 @@ void checkBrightness(){
 		if(alert == 0){
 			warnCount=(warnCount+1)%10;
 			alert = 1;
+
 		}
-		turn_on_leds();
+		turn_off_leds();
 		playAlarm();
 		numbers[3]=warnCount;
 	}else{
 		alert=0;
 		seven_segment_set_num(numbers);
 		PWM_Change_Tone(0, 0);
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_1, 0);
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0);
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0);
-		__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 0);
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 0);
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 0);
-		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0);
+		turn_on_leds();
 	}
 }
 
 
+
+void init_program(){
+
+}
 
 void displayBR(){
 	setNumber(currentBR);
