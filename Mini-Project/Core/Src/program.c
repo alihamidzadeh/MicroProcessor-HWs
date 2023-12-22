@@ -319,50 +319,60 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	if (initFlag==0){
 		if (GPIO_Pin == GPIO_PIN_4) { //Left button (Decrease Number) ==> PF4
 			if (HAL_GetTick() - last_time2 > 400){
+				int n = sprintf(data, "[INFO] Digit %d Decreased\n",state+1);
+				HAL_UART_Transmit(&huart3, data, n, 1000);
 				if (state == 0){
 					numbers[state]=(numbers[state] - 1);
 					if (numbers[state] == -1)
 						numbers[state]=9;
-
+					int n = sprintf(data, "[INFO] DimStep Decreased\n");
+					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}else if (state == 1){
 					numbers[state]=(numbers[state] - 1);
 						if (numbers[state] == 0)
 							numbers[state]=4;
-
+						int n = sprintf(data, "[INFO] Lights changed to %d\n",numbers[1]);
+						HAL_UART_Transmit(&huart3, data, n, 1000);
 				}else if (state == 2){
 					numbers[state]=(numbers[state] - 1);
 						if (numbers[state] == 0)
 							numbers[state]=3;
+						int n = sprintf(data, "[INFO] Wave changed to %d\n",numbers[2]);
+						HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
 				last_time2=HAL_GetTick();
 			}
-
-
 		}
-
 		else if (GPIO_Pin == GPIO_PIN_1){	 //middle button (Increase Number) ==> PA1
 			if (HAL_GetTick() - last_time2 > 400){
+				int n = sprintf(data, "[INFO] Digit %d Increased\n",state+1);
+				HAL_UART_Transmit(&huart3, data, n, 1000);
 				if (state == 0){
 					numbers[state]=(numbers[state] + 1) % 10;
+					int n = sprintf(data, "[INFO] DimStep Increased\n",state+1);
+					HAL_UART_Transmit(&huart3, data, n, 1000);
 
 				}else if (state == 1){
 					numbers[state]=(numbers[state] + 1) % 5;
 					if (numbers[state] == 0)
 						numbers[state]++;
-
+					int n = sprintf(data, "[INFO] Lights changed to %d\n",numbers[1]);
+					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}else if (state == 2){
 					numbers[state]=(numbers[state] + 1) % 4;
 					if (numbers[state] == 0)
 						numbers[state]++;
+					int n = sprintf(data, "[INFO] Wave changed to %d\n",numbers[2]);
+					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
 				last_time2=HAL_GetTick();
 			}
-			int n = sprintf(data, "[INFO] Digit %d Increased\n",state+1);
-			HAL_UART_Transmit(&huart3, data, n, 1000);
-		}
 
+		}
 		else if (GPIO_Pin == GPIO_PIN_0) { //Right button (Next Number)==> PC0
 			if (HAL_GetTick() - last_time2 > 400){
+				int n = sprintf(data, "[INFO] Digit changed\n",state+1);
+				HAL_UART_Transmit(&huart3, data, n, 1000);
 				state = (state + 1) % 3;
 				last_time2=HAL_GetTick();
 				}
@@ -371,6 +381,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}else{
 		if (GPIO_Pin == GPIO_PIN_4) { //Left button: set threshold
 			if (HAL_GetTick() - last_time2 > 400){
+				int n = sprintf(data, "[INFO] Threshold setted\n",state+1);
+				HAL_UART_Transmit(&huart3, data, n, 1000);
 				threshold=threshhold_plus+initBR;
 				initFlag=0;
 				HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 0);
@@ -474,6 +486,9 @@ void checkBrightness(){
 			turn_off_leds();
 			playAlarm();
 			numbers[3]=warnCount;
+			char data[100];
+			int n = sprintf(data, "[WARN] Critical Situation\n");
+			HAL_UART_Transmit(&huart3, data, n, 1000);
 		}else{
 			alert=0;
 			seven_segment_set_num(numbers);
