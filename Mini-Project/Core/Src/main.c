@@ -137,7 +137,7 @@ int main(void)
   HAL_ADC_Start_IT(&hadc1);
   HAL_ADC_Start_IT(&hadc3);
 
-  HAL_UART_Transmit(&huart3,"TTT to while",12,1000);
+//  HAL_UART_Transmit(&huart3,"TTT to while",12,1000);
   HAL_TIM_Base_Start_IT(&htim1);
   HAL_TIM_Base_Start_IT(&htim2);
   HAL_TIM_Base_Start_IT(&htim3);
@@ -157,29 +157,17 @@ int main(void)
 //  setSegment(2,9,1);
 //  setSegment(3,7,1);
 //  setNumber(1110);
-	turn_on_leds();
+//	turn_on_leds();
 
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  HAL_UART_Transmit(&huart3,"test Y.S",8,1000);
 
-//		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, 0); //B
-//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, 0);  //A
-//		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_9, 1);  //C
-//		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_13, 0);  //D
 		programLoop();
 
-//		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, 1);
-//		HAL_Delay(3000);
-//		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, 1);
-//		HAL_Delay(3000);
-//		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, 1);
-//		HAL_Delay(3000);
-//		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
-//		HAL_Delay(3000);
+
   }
   /* USER CODE END 3 */
 }
