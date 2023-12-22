@@ -42,14 +42,10 @@ void set_start_time(){
 	start_t.Hours = localTime->tm_hour;
 	start_t.Minutes = localTime->tm_min;
 	start_t.Seconds = localTime->tm_sec;
+
     HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
-
-
-    ///////////// Inaro harga mikhay bezar to arraye time_str time ro dari
-//	  HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
-//	  sprintf(timeStr, "%2d:%2d:%2d\n", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
-//	  HAL_UART_Transmit(&huart3, timeStr, 9, HAL_MAX_DELAY);
 }
+
 int state = 0; //0,1,2
 int numbers[4] = {1,1,2,0}; //show value of states
 int mledlight[20] = {-90, -80, -70, -60, -50, -40, -30, -20, -10, 0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
@@ -339,28 +335,30 @@ int initFlag;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	char data[100];
+	HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+	sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
 	if (initFlag==0){
 		if (GPIO_Pin == GPIO_PIN_4) { //Left button (Decrease Number) ==> PF4
 			if (HAL_GetTick() - last_time2 > 400){
-				int n = sprintf(data, "[INFO] Digit %d Decreased\n",state+1);
+				int n = sprintf(data, "[INFO] %s Digit %d Decreased\n", timeStr,state+1);
 				HAL_UART_Transmit(&huart3, data, n, 1000);
 				if (state == 0){
 					numbers[state]=(numbers[state] - 1);
 					if (numbers[state] == -1)
 						numbers[state]=9;
-					int n = sprintf(data, "[INFO] DimStep Decreased\n");
+					int n = sprintf(data, "[INFO] %s DimStep Decreased\n", timeStr);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}else if (state == 1){
 					numbers[state]=(numbers[state] - 1);
 						if (numbers[state] == 0)
 							numbers[state]=4;
-						int n = sprintf(data, "[INFO] Lights changed to %d\n",numbers[1]);
+						int n = sprintf(data, "[INFO] %s Lights changed to %d\n", timeStr,numbers[1]);
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 				}else if (state == 2){
 					numbers[state]=(numbers[state] - 1);
 						if (numbers[state] == 0)
 							numbers[state]=3;
-						int n = sprintf(data, "[INFO] Wave changed to %d\n",numbers[2]);
+						int n = sprintf(data, "[INFO] %s Wave changed to %d\n", timeStr,numbers[2]);
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
 				last_time2=HAL_GetTick();
@@ -368,24 +366,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		}
 		else if (GPIO_Pin == GPIO_PIN_1){	 //middle button (Increase Number) ==> PA1
 			if (HAL_GetTick() - last_time2 > 400){
-				int n = sprintf(data, "[INFO] Digit %d Increased\n",state+1);
+
+				int n = sprintf(data, "[INFO] %s Digit %d Increased\n", timeStr,state+1);
 				HAL_UART_Transmit(&huart3, data, n, 1000);
 				if (state == 0){
 					numbers[state]=(numbers[state] + 1) % 10;
-					int n = sprintf(data, "[INFO] DimStep Increased\n",state+1);
+					int n = sprintf(data, "[INFO] %s DimStep Increased\n", timeStr,state+1);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 
 				}else if (state == 1){
 					numbers[state]=(numbers[state] + 1) % 5;
 					if (numbers[state] == 0)
 						numbers[state]++;
-					int n = sprintf(data, "[INFO] Lights changed to %d\n",numbers[1]);
+					int n = sprintf(data, "[INFO] %s Lights changed to %d\n", timeStr,numbers[1]);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}else if (state == 2){
 					numbers[state]=(numbers[state] + 1) % 4;
 					if (numbers[state] == 0)
 						numbers[state]++;
-					int n = sprintf(data, "[INFO] Wave changed to %d\n",numbers[2]);
+					int n = sprintf(data, "[INFO] %s Wave changed to %d\n", timeStr,numbers[2]);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
 				last_time2=HAL_GetTick();
@@ -394,7 +393,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		}
 		else if (GPIO_Pin == GPIO_PIN_0) { //Right button (Next Number)==> PC0
 			if (HAL_GetTick() - last_time2 > 400){
-				int n = sprintf(data, "[INFO] Digit changed\n",state+1);
+				HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+				sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
+				int n = sprintf(data, "[INFO] %s Digit changed\n", timeStr,state+1);
 				HAL_UART_Transmit(&huart3, data, n, 1000);
 				state = (state + 1) % 3;
 				last_time2=HAL_GetTick();
@@ -404,7 +405,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 	}else{
 		if (GPIO_Pin == GPIO_PIN_4) { //Left button: set threshold
 			if (HAL_GetTick() - last_time2 > 400){
-				int n = sprintf(data, "[INFO] Threshold setted\n",state+1);
+				int n = sprintf(data, "[INFO] %s Threshold setted\n", timeStr,state+1);
 				HAL_UART_Transmit(&huart3, data, n, 1000);
 				threshold=threshhold_plus+initBR;
 				initFlag=0;
@@ -502,11 +503,14 @@ void checkBrightness(){
 	if (initFlag == 0){
 		if (currentBR >= threshold){
 			setNumber(currentBR);
+
 			if(alert == 0){
 				warnCount=(warnCount+1)%10;
 				alert = 1;
+				HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+				sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
 				char data[100];
-				int n = sprintf(data, "[WARN] Critical Situation\n");
+				int n = sprintf(data, "[WARN] %s Critical Situation\n", timeStr);
 				HAL_UART_Transmit(&huart3, data, n, 1000);
 			}
 			turn_off_leds();
@@ -533,8 +537,13 @@ void programInit() {
 	setNumber(0);
 
 	char data[100];
-	int n = sprintf(data, "[INFO] Program Started\n");
+
+	HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+	sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
+	int n = sprintf(data, "[INFO] %s Program Started\n", timeStr);
 	HAL_UART_Transmit(&huart3, data, n, 1000);
+
+
 }
 
 
@@ -560,22 +569,24 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 			input[index_arr++] = '\0';
 			index_arr = 0;
 			int value;
+			HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+			sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
 			if (strncmp(input, prefix1, strlen(prefix1)) == 0){ //DIMSTEP
 				if (sscanf(input + strlen(prefix1), "%d", &value) == 1) {
 					if (value >= 0 && value <= 9){
 						int n;
 						if (numbers[0]>value)
-							n = sprintf(data, "[INFO] DimStep decreased\n");
+							n = sprintf(data, "[INFO] %s DimStep decreased\n", timeStr);
 						else
-							n = sprintf(data, "[INFO] DimStep increased\n");
+							n = sprintf(data, "[INFO] %s DimStep increased\n", timeStr);
 						numbers[0]=value;
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}else{
-						int n = sprintf(data, "[ERR] Not valid range of number\n");
+						int n = sprintf(data, "[ERR] %s Not valid range of number\n", timeStr);
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}
 				}else{
-					int n = sprintf(data, "[ERR] Not valid Value\n");
+					int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
 
@@ -584,17 +595,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 					if (value >= 1 && value <= 4){
 						int n;
 						if (numbers[1]>value)
-							n = sprintf(data, "[INFO] LIGHTS decreased\n");
+							n = sprintf(data, "[INFO] %s LIGHTS decreased\n", timeStr);
 						else
-							n = sprintf(data, "[INFO] LIGHTS increased\n");
+							n = sprintf(data, "[INFO] %s LIGHTS increased\n", timeStr);
 						numbers[1]=value;
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}else{
-						int n = sprintf(data, "[ERR] Not valid range of number\n");
+						int n = sprintf(data, "[ERR] %s Not valid range of number\n", timeStr);
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}
 				}else{
-					int n = sprintf(data, "[ERR] Not valid Value\n");
+					int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
 			}else if (strncmp(input, prefix3, strlen(prefix3)) == 0){ //WARNNUM
@@ -602,21 +613,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 					if (value >= 1 && value <= 3){
 						int n;
 						if (numbers[2]>value)
-							n = sprintf(data, "[INFO] WARNNUM decreased\n");
+							n = sprintf(data, "[INFO] %s WARNNUM decreased\n", timeStr);
 						else
-							n = sprintf(data, "[INFO] WARNNUM increased\n");
+							n = sprintf(data, "[INFO] %s WARNNUM increased\n", timeStr);
 						numbers[2]=value;
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}else{
-						int n = sprintf(data, "[ERR] Not valid range of number\n");
+						int n = sprintf(data, "[ERR] %s Not valid range of number\n", timeStr);
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}
 				}else{
-					int n = sprintf(data, "[ERR] Not valid Value\n");
+					int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
 			}else{											//Others
-				int n = sprintf(data, "[ERR] Not valid Value\n");
+				int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
 				HAL_UART_Transmit(&huart3, data, n, 1000);
 			}
 

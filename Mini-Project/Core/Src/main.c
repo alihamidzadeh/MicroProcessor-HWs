@@ -138,7 +138,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  set_start_time();
+
   HAL_ADC_Start_IT(&hadc1);
   HAL_ADC_Start_IT(&hadc3);
 
@@ -163,6 +163,9 @@ int main(void)
 //  setSegment(3,7,1);
 //  setNumber(1110);
 //	turn_on_leds();
+  __HAL_RCC_RTC_ENABLE();
+
+  set_start_time();
 
   while (1)
   {

@@ -6,6 +6,11 @@ port = 'COM6'
 baudrate = 38400
 
 ser = serial.Serial(port, baudrate)
+logfile_path = 'E:\Term 7\MicroProcessor\MicroProcessorLab\Micro_git\MicroProcessor-HWs\Mini-Project\output.log'
+
+with open(logfile_path, 'w') as logfile:
+    logfile.write("")
+
 
 def send_data():
     while True:
@@ -19,6 +24,8 @@ def receive_data():
         received_data = ser.readline().decode().strip()
         if received_data:
             print(f"{received_data}")
+            with open(logfile_path, 'a') as logfile:
+                logfile.write(f"{received_data}\n")
 
 send_thread = threading.Thread(target=send_data)
 receive_thread = threading.Thread(target=receive_data)
