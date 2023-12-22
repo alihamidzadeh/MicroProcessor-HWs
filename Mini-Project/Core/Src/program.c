@@ -1,6 +1,7 @@
 #include "main.h"
 #include <math.h>
 #include <strings.h>
+#include <time.h>
 
 
 typedef struct {
@@ -25,8 +26,30 @@ extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim4;
+extern RTC_HandleTypeDef hrtc;
+
+RTC_TimeTypeDef rtc_time ;
+char timeStr[100];
+
+void set_start_time(){
+	time_t currentTime;
+	struct tm *localTime;
+	time(&currentTime);
+	localTime = localtime(&currentTime);
+//    printf("Current time: %02d:%02d:%02d\n", localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+
+	RTC_TimeTypeDef start_t ;
+	start_t.Hours = localTime->tm_hour;
+	start_t.Minutes = localTime->tm_min;
+	start_t.Seconds = localTime->tm_sec;
+    HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
 
 
+    ///////////// Inaro harga mikhay bezar to arraye time_str time ro dari
+//	  HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+//	  sprintf(timeStr, "%2d:%2d:%2d\n", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
+//	  HAL_UART_Transmit(&huart3, timeStr, 9, HAL_MAX_DELAY);
+}
 int state = 0; //0,1,2
 int numbers[4] = {1,1,2,0}; //show value of states
 int mledlight[20] = {-90, -80, -70, -60, -50, -40, -30, -20, -10, 0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
@@ -482,13 +505,14 @@ void checkBrightness(){
 			if(alert == 0){
 				warnCount=(warnCount+1)%10;
 				alert = 1;
+				char data[100];
+				int n = sprintf(data, "[WARN] Critical Situation\n");
+				HAL_UART_Transmit(&huart3, data, n, 1000);
 			}
 			turn_off_leds();
 			playAlarm();
 			numbers[3]=warnCount;
-			char data[100];
-			int n = sprintf(data, "[WARN] Critical Situation\n");
-			HAL_UART_Transmit(&huart3, data, n, 1000);
+
 		}else{
 			alert=0;
 			seven_segment_set_num(numbers);
