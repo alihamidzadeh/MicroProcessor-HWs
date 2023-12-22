@@ -1,5 +1,6 @@
 #include "main.h"
 #include <math.h>
+#include <strings.h>
 
 
 typedef struct {
@@ -263,31 +264,6 @@ void programLoop() {
     seven_segment_refresh();
 }
 
-
-led_types leds_ltr= {.digit={
-	   {.port=GPIOE, .pin=GPIO_PIN_9},  //1: D3
-	   {.port=GPIOE, .pin=GPIO_PIN_8},  //2: D4
-	   {.port=GPIOE, .pin=GPIO_PIN_15}, //3: D6
-	   {.port=GPIOE, .pin=GPIO_PIN_14}, //4: D8
-	   {.port=GPIOE, .pin=GPIO_PIN_13}, //5: D10
-	   {.port=GPIOE, .pin=GPIO_PIN_12}, //6: D9
-	   {.port=GPIOE, .pin=GPIO_PIN_11}, //7: D7
-	   {.port=GPIOE, .pin=GPIO_PIN_10}, //8: D5
-}};
-
-led_types leds_rtl= {.digit={
-		{.port=GPIOE, .pin=GPIO_PIN_9},  //1: D3
-		{.port=GPIOE, .pin=GPIO_PIN_10}, //2: D5
-		{.port=GPIOE, .pin=GPIO_PIN_11}, //3: D7
-		{.port=GPIOE, .pin=GPIO_PIN_12}, //4: D9
-		{.port=GPIOE, .pin=GPIO_PIN_13}, //5: D10
-		{.port=GPIOE, .pin=GPIO_PIN_14}, //6: D8
-		{.port=GPIOE, .pin=GPIO_PIN_15}, //7: D6
-		{.port=GPIOE, .pin=GPIO_PIN_8},  //8: D4
-}};
-
-
-
 void setSegment(int state, int digit, int flag){
 //(flag==0) ==> for first part, show 1 number with 4 digits
 //(flag==1) ==> for second part, show 4 number with 1 digits (has limit)
@@ -339,6 +315,7 @@ int threshold=-1;
 int initFlag;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	char data[100];
 	if (initFlag==0){
 		if (GPIO_Pin == GPIO_PIN_4) { //Left button (Decrease Number) ==> PF4
 			if (HAL_GetTick() - last_time2 > 400){
@@ -359,6 +336,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				}
 				last_time2=HAL_GetTick();
 			}
+
+
 		}
 
 		else if (GPIO_Pin == GPIO_PIN_1){	 //middle button (Increase Number) ==> PA1
@@ -378,6 +357,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				}
 				last_time2=HAL_GetTick();
 			}
+			int n = sprintf(data, "[INFO] Digit %d Increased\n",state+1);
+			HAL_UART_Transmit(&huart3, data, n, 1000);
 		}
 
 		else if (GPIO_Pin == GPIO_PIN_0) { //Right button (Next Number)==> PC0
@@ -414,7 +395,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 		currentVolume = (int) fx;
 		unsigned char data[100];
 		int n = sprintf(data, "volume: %d  %.4f\n", x, fx);
-		HAL_UART_Transmit(&huart3, data, n, 1000);
+//		HAL_UART_Transmit(&huart3, data, n, 1000);
 
 	}
 	else if(hadc->Instance == ADC1){
@@ -424,7 +405,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 		unsigned char data[100];
 
 		int n = sprintf(data, "LDR: %d  %.2f \n", x, fx);
-		HAL_UART_Transmit(&huart3, data, n, 1000);
+//		HAL_UART_Transmit(&huart3, data, n, 1000);
 		checkBrightness();
 	}
 
@@ -436,6 +417,8 @@ int buzz_type = 2;
 int warnCount=0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	programLoop();
+
 	if (htim->Instance == TIM2) {
 		counter = counter + 1;
 		buzz_type = numbers[2];
@@ -459,7 +442,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			setNumber(threshhold_plus+initBR);
 		}
 
-		HAL_UART_Transmit(&huart3, data, n, 1000);
+//		HAL_UART_Transmit(&huart3, data, n, 1000);
 		if(LEDLight < 0){
 			LEDs_power = 0;
 		}
@@ -479,8 +462,6 @@ void playAlarm(){
 			sin_signal(counter);
 	}
 }
-
-
 
 void checkBrightness(){
 	if (initFlag == 0){
@@ -512,4 +493,96 @@ void programInit() {
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 1);
 	setNumber(0);
 
+	char data[100];
+	int n = sprintf(data, "[INFO] Program Started\n");
+	HAL_UART_Transmit(&huart3, data, n, 1000);
 }
+
+
+
+char character;
+char input[50];
+int index_arr = 0;
+
+void uart_rx_enable_it(void) {
+	HAL_UART_Receive_IT(&huart3, &character, 1);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	char data[100];
+    char prefix1[] = "[DIMSTEP]:";
+    char prefix2[] = "[LIGHTS]:";
+    char prefix3[] = "[WARNNUM]:";
+
+    if (huart->Instance == USART3){
+    	if(character != 10){
+    		input[index_arr++] = character;
+    	} else{
+			input[index_arr++] = '\0';
+			index_arr = 0;
+			int value;
+			if (strncmp(input, prefix1, strlen(prefix1)) == 0){ //DIMSTEP
+				if (sscanf(input + strlen(prefix1), "%d", &value) == 1) {
+					if (value >= 0 && value <= 9){
+						int n;
+						if (numbers[0]>value)
+							n = sprintf(data, "[INFO] DimStep decreased\n");
+						else
+							n = sprintf(data, "[INFO] DimStep increased\n");
+						numbers[0]=value;
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}else{
+						int n = sprintf(data, "[ERR] Not valid range of number\n");
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}
+				}else{
+					int n = sprintf(data, "[ERR] Not valid Value\n");
+					HAL_UART_Transmit(&huart3, data, n, 1000);
+				}
+
+			}else if (strncmp(input, prefix2, strlen(prefix2)) == 0){ //LIGHTS
+				if (sscanf(input + strlen(prefix2), "%d", &value) == 1) {
+					if (value >= 1 && value <= 4){
+						int n;
+						if (numbers[1]>value)
+							n = sprintf(data, "[INFO] LIGHTS decreased\n");
+						else
+							n = sprintf(data, "[INFO] LIGHTS increased\n");
+						numbers[1]=value;
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}else{
+						int n = sprintf(data, "[ERR] Not valid range of number\n");
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}
+				}else{
+					int n = sprintf(data, "[ERR] Not valid Value\n");
+					HAL_UART_Transmit(&huart3, data, n, 1000);
+				}
+			}else if (strncmp(input, prefix3, strlen(prefix3)) == 0){ //WARNNUM
+				if (sscanf(input + strlen(prefix3), "%d", &value) == 1) {
+					if (value >= 1 && value <= 3){
+						int n;
+						if (numbers[2]>value)
+							n = sprintf(data, "[INFO] WARNNUM decreased\n");
+						else
+							n = sprintf(data, "[INFO] WARNNUM increased\n");
+						numbers[2]=value;
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}else{
+						int n = sprintf(data, "[ERR] Not valid range of number\n");
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}
+				}else{
+					int n = sprintf(data, "[ERR] Not valid Value\n");
+					HAL_UART_Transmit(&huart3, data, n, 1000);
+				}
+			}else{											//Others
+				int n = sprintf(data, "[ERR] Not valid Value\n");
+				HAL_UART_Transmit(&huart3, data, n, 1000);
+			}
+
+		}
+		uart_rx_enable_it();
+    }
+}
+

@@ -149,7 +149,7 @@ int main(void)
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
-
+  uart_rx_enable_it();
 
 // Test
 //  setSegment(0,9,1);
@@ -165,7 +165,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-		programLoop();
+//		programLoop();
 
 
   }
