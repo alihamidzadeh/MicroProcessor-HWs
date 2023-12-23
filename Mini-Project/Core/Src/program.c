@@ -32,16 +32,19 @@ RTC_TimeTypeDef rtc_time ;
 char timeStr[100];
 
 void set_start_time(){
-	time_t currentTime;
-	struct tm *localTime;
-	time(&currentTime);
-	localTime = localtime(&currentTime);
+//	time_t currentTime;
+//	struct tm *localTime;
+//	time(&currentTime);
+//	localTime = localtime(&currentTime);
 //    printf("Current time: %02d:%02d:%02d\n", localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
-
 	RTC_TimeTypeDef start_t ;
-	start_t.Hours = localTime->tm_hour;
-	start_t.Minutes = localTime->tm_min;
-	start_t.Seconds = localTime->tm_sec;
+	start_t.Hours = 20;
+	start_t.Minutes = 20;
+	start_t.Seconds = 20;
+
+	if (timeStr[0] != '\0'){
+		sscanf(timeStr, "%d:%d:%d", &start_t.Hours,&start_t.Minutes, &start_t.Seconds) == 3;
+	}
 
     HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
 }
