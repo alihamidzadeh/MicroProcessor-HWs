@@ -31,28 +31,31 @@ extern RTC_HandleTypeDef hrtc;
 RTC_TimeTypeDef rtc_time ;
 char timeStr[100];
 
-void set_start_time(){
-//	time_t currentTime;
+void set_start_time(int hour, int minute, int second){
+	time_t currentTime;
 //	struct tm *localTime;
 //	time(&currentTime);
 //	localTime = localtime(&currentTime);
 //    printf("Current time: %02d:%02d:%02d\n", localTime->tm_hour, localTime->tm_min, localTime->tm_sec);
+
 	RTC_TimeTypeDef start_t ;
+//	start_t.Hours = localTime->tm_hour;
+//	start_t.Minutes = localTime->tm_min;
+//	start_t.Seconds = localTime->tm_sec;
+
 	start_t.Hours = 20;
 	start_t.Minutes = 20;
 	start_t.Seconds = 20;
-
-	if (timeStr[0] != '\0'){
-		sscanf(timeStr, "%d:%d:%d", &start_t.Hours,&start_t.Minutes, &start_t.Seconds) == 3;
-	}
 
     HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
 }
 
 int state = 0; //0,1,2
-int numbers[4] = {1,1,2,0}; //show value of states
+int numbers[4] = {1,3,2,0}; //show value of states
 int mledlight[20] = {-90, -80, -70, -60, -50, -40, -30, -20, -10, 0, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
-int mthreshold[15] = {0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280};
+int mthreshold[20] = {0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320,340,360, 380};
+//int mthreshold[15] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140};
+//int mthreshold[15] = {0, 0, 20, 20, 40, 40, 60, 60, 80, 80, 100, 100, 120, 120, 140};
 
 TIM_HandleTypeDef *pwm_timer_buzzer = &htim1; // Point to PWM timer configured in CubeMX
 uint32_t pwm_channel_buzz = TIM_CHANNEL_1;  // Specify configured PWM channel
@@ -193,9 +196,6 @@ void triangle_signal(int counter){
 
 }
 
-
-
-
 seven_segment_type seven_segment = {
 		.digit_activators={
 			   {.port=GPIOB, .pin=GPIO_PIN_2},
@@ -278,12 +278,14 @@ void seven_segment_refresh(void) {
 
 
 
-void programContinue(){
-	seven_segment_set_num(numbers);
-}
+//void programContinue(){
+//	seven_segment_set_num(numbers);
+//}
 
 void programLoop() {
     seven_segment_refresh();
+
+    setNumber(1234);
 }
 
 void setSegment(int state, int digit, int flag){
@@ -374,7 +376,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 				HAL_UART_Transmit(&huart3, data, n, 1000);
 				if (state == 0){
 					numbers[state]=(numbers[state] + 1) % 10;
-					int n = sprintf(data, "[INFO] %s DimStep Increased\n", timeStr,state+1);
+					int n = sprintf(data, "[INFO] %s DimStep Increased\n", timeStr);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 
 				}else if (state == 1){
@@ -458,37 +460,39 @@ int warnCount=0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	programLoop();
 
-	if (htim->Instance == TIM2) {
-		counter = counter + 1;
-		buzz_type = numbers[2];
-		if(counter > 5000){
-			counter = 0;
-		}
-
-		HAL_ADC_Start_IT(&hadc1);
-		HAL_ADC_Start_IT(&hadc3);
-		checkBrightness();
-		int LEDLight = (int) numbers[0]*100 + mledlight[(currentVolume/5)-1]; //0.1ta 0.1ta
-	    threshhold_plus = (int) mthreshold[(currentVolume/7)-1]; //20ta 20ta
-
-		unsigned char data[100];
-		int n = sprintf(data, "Treshhold plus: %d taghsim 5 %d \n", threshhold_plus, (currentVolume/7));
-
-
-		if (initFlag==1){
-			if (initBR == -1)
-				initBR = HAL_ADC_GetValue(&hadc1);
-			setNumber(threshhold_plus+initBR);
-		}
-
-//		HAL_UART_Transmit(&huart3, data, n, 1000);
-		if(LEDLight < 0){
-			LEDs_power = 0;
-		}
-		else{
-			LEDs_power = LEDLight;
-		}
-	}
+//	if (htim->Instance == TIM2) {
+//		counter = counter + 1;
+//		buzz_type = numbers[2];
+//		if(counter > 5000){
+//			counter = 0;
+//		}
+//
+//		HAL_ADC_Start_IT(&hadc1);
+//		HAL_ADC_Start_IT(&hadc3);
+//		checkBrightness();
+//		int LEDLight = (int) numbers[0]*100 + mledlight[(currentVolume/5)-1]; //0.1ta 0.1ta
+//	    threshhold_plus = (int) mthreshold[(currentVolume/5)-1]; //20ta 20ta
+//
+//		unsigned char data[100];
+////		int n = sprintf(data, "Treshhold plus: %d taghsim 7 %d \n", threshhold_plus, (currentVolume/7));
+////		HAL_UART_Transmit(&huart3, data, n, 1000);
+//
+//
+//
+//		if (initFlag==1){
+//			if (initBR == -1)
+//				initBR = HAL_ADC_GetValue(&hadc1);
+//			setNumber(threshhold_plus+initBR);
+//		}
+//
+////		HAL_UART_Transmit(&huart3, data, n, 1000);
+//		if(LEDLight < 0){
+//			LEDs_power = 0;
+//		}
+//		else{
+//			LEDs_power = LEDLight;
+//		}
+//	}
 }
 
 void playAlarm(){
@@ -537,16 +541,13 @@ void programInit() {
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 1);
-	setNumber(0);
 
 	char data[100];
 
-	HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
-	sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
-	int n = sprintf(data, "[INFO] %s Program Started\n", timeStr);
+//	HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+//	sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
+	int n = sprintf(data, "[INFO] Program Started\n");
 	HAL_UART_Transmit(&huart3, data, n, 1000);
-
-
 }
 
 
@@ -564,6 +565,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
     char prefix1[] = "[DIMSTEP]:";
     char prefix2[] = "[LIGHTS]:";
     char prefix3[] = "[WARNNUM]:";
+    char prefix4[] = "[TIME]:";
 
     if (huart->Instance == USART3){
     	if(character != 10){
@@ -629,6 +631,25 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 					int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
+			}else if (strncmp(input, prefix4, strlen(prefix4)) == 0){ //Time
+				int hour;
+				int minute;
+				int second;
+				if (sscanf(input + strlen(prefix4), "%2d:%2d:%2d", &hour, &minute, &second) == 3) {
+//					set_start_time(hour,minute,second);
+					RTC_TimeTypeDef start_t ;
+					start_t.Hours = hour;
+					start_t.Minutes = minute;
+					start_t.Seconds = second;
+
+				    HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
+
+					int n = sprintf(data, "[INFO] Time set to %02d:%02d:%02d\n", hour, minute, second);
+					HAL_UART_Transmit(&huart3, data, n, 1000);
+				}else{
+					int n = sprintf(data, "[ERR] Not valid Time\n");
+					HAL_UART_Transmit(&huart3, data, n, 1000);
+				}
 			}else{											//Others
 				int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
 				HAL_UART_Transmit(&huart3, data, n, 1000);
@@ -638,4 +659,3 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 		uart_rx_enable_it();
     }
 }
-
