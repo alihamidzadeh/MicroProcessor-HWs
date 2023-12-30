@@ -1,0 +1,6 @@
+../Core/Src/program.c:56:6:HAL_ADC_ConvCpltCallback	128	static
+../Core/Src/program.c:136:6:programInit	80	static
+../Core/Src/program.c:150:6:programLoop	224	static
+../Core/Src/program.c:187:6:uart_rx_enable_it	8	static
+../Core/Src/program.c:192:6:HAL_UART_RxCpltCallback	24	static
+../Core/Src/program.c:209:6:HAL_GPIO_EXTI_Callback	16	static
