@@ -1,9 +1,9 @@
 ../Core/Src/program.c:12:6:PWM_Change_Tone	40	static
 ../Core/Src/program.c:57:6:HAL_ADC_ConvCpltCallback	128	static
-../Core/Src/program.c:90:6:checkBrightness	8	static
-../Core/Src/program.c:120:6:programInit	80	static
-../Core/Src/program.c:139:6:programLoop	224	static
-../Core/Src/program.c:172:6:HAL_TIM_PeriodElapsedCallback	16	static
-../Core/Src/program.c:186:6:uart_rx_enable_it	8	static
-../Core/Src/program.c:190:6:HAL_UART_RxCpltCallback	16	static
-../Core/Src/program.c:207:6:HAL_GPIO_EXTI_Callback	16	static
+../Core/Src/program.c:92:6:checkBrightness	8	static
+../Core/Src/program.c:122:6:programInit	80	static
+../Core/Src/program.c:143:6:programLoop	224	static
+../Core/Src/program.c:176:6:HAL_TIM_PeriodElapsedCallback	16	static
+../Core/Src/program.c:190:6:uart_rx_enable_it	8	static
+../Core/Src/program.c:194:6:HAL_UART_RxCpltCallback	16	static
+../Core/Src/program.c:211:6:HAL_GPIO_EXTI_Callback	16	static

@@ -4,10 +4,10 @@
 extern ADC_HandleTypeDef hadc3;
 extern UART_HandleTypeDef huart3;
 extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim4;
 
-TIM_HandleTypeDef *pwm_timer_buzzer = &htim3; // Point to PWM timer configured in CubeMX
-uint32_t pwm_channel_buzz = TIM_CHANNEL_1;  // Specify configured PWM channel
+TIM_HandleTypeDef *pwm_timer_buzzer = &htim4; // Point to PWM timer configured in CubeMX
+uint32_t pwm_channel_buzz = TIM_CHANNEL_4;  // Specify configured PWM channel
 
 void PWM_Change_Tone(uint32_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000), volume (0 - 1000)
 {
@@ -63,6 +63,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 		int n = sprintf(data, "LDR: %d  %d \n", x, currentBR);
 		HAL_UART_Transmit(&huart3, data, n, 1000);
 //		checkBrightness();
+//		HAL_ADC_Start_IT(&hadc3);
+
 	}
 }
 
@@ -84,7 +86,7 @@ int warnCount=0;
 //	}
 //}
 
-int threshhold = 15;
+int threshhold = 5;
 
 
 void checkBrightness(){
@@ -118,6 +120,9 @@ unsigned char message[] = {
 };
 
 void programInit() {
+
+
+
 	LiquidCrystal(GPIOD, GPIO_PIN_8, GPIO_PIN_9, GPIO_PIN_10, GPIO_PIN_11, GPIO_PIN_12, GPIO_PIN_13, GPIO_PIN_14);
 
 	char data[50];
@@ -125,7 +130,6 @@ void programInit() {
 	HAL_UART_Transmit(&huart3, data, n, 1000);
 	begin(20, 4);
 
-	write("vv");
 }
 
 char messages[50];
@@ -211,8 +215,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				flag = 0;
 			else
 				flag = 1;
-
-//			clear(); //programLoop(); //doesnt work, maybe cause for Priority
 			HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
 			last_time2=HAL_GetTick();
 		}
