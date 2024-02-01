@@ -4,7 +4,158 @@
 //#include <time.h>
 
 
+int pageflag = 0;
+int menu_curser_r = 1;
 
+extern TIM_HandleTypeDef htim2;
+
+
+
+// Input pull down rising edge trigger interrupt pins:
+// Row1 PD3, Row2 PD5, Row3 PD7, Row4 PB4
+GPIO_TypeDef *const Row_ports[] = {GPIOD, GPIOD, GPIOD, GPIOD};
+const uint16_t Row_pins[] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3};
+// Output pins: Column1 PD4, Column2 PD6, Column3 PB3, Column4 PB5
+GPIO_TypeDef *const Column_ports[] = {GPIOD, GPIOD, GPIOD, GPIOD};
+const uint16_t Column_pins[] = {GPIO_PIN_10, GPIO_PIN_11, GPIO_PIN_12, GPIO_PIN_13};
+volatile uint32_t last_gpio_exti;
+
+int starter_to_main = 0;
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (last_gpio_exti + 70 > HAL_GetTick()) // Simple button debouncing
+  {
+    return;
+  }
+  last_gpio_exti = HAL_GetTick();
+
+  int8_t row_number = -1;
+  int8_t column_number = -1;
+
+  if (GPIO_Pin == GPIO_PIN_0)
+  {
+    // blue_button_pressed = 1;
+    // return;
+  }
+
+  for (uint8_t row = 0; row < 4; row++) // Loop through Rows
+  {
+    if (GPIO_Pin == Row_pins[row])
+    {
+      row_number = row;
+    }
+  }
+
+  HAL_GPIO_WritePin(Column_ports[0], Column_pins[0], 0);
+  HAL_GPIO_WritePin(Column_ports[1], Column_pins[1], 0);
+  HAL_GPIO_WritePin(Column_ports[2], Column_pins[2], 0);
+  HAL_GPIO_WritePin(Column_ports[3], Column_pins[3], 0);
+
+  for (uint8_t col = 0; col < 4; col++) // Loop through Columns
+  {
+    HAL_GPIO_WritePin(Column_ports[col], Column_pins[col], 1);
+    if (HAL_GPIO_ReadPin(Row_ports[row_number], Row_pins[row_number]))
+    {
+      column_number = col;
+    }
+    HAL_GPIO_WritePin(Column_ports[col], Column_pins[col], 0);
+  }
+
+  HAL_GPIO_WritePin(Column_ports[0], Column_pins[0], 1);
+  HAL_GPIO_WritePin(Column_ports[1], Column_pins[1], 1);
+  HAL_GPIO_WritePin(Column_ports[2], Column_pins[2], 1);
+  HAL_GPIO_WritePin(Column_ports[3], Column_pins[3], 1);
+
+  if (row_number == -1 || column_number == -1)
+  {
+    return; // Reject invalid scan
+  }
+  //   C0   C1   C2   C3
+  // +----+----+----+----+
+  // | 1  | 2  | 3  | 4  |  R0
+  // +----+----+----+----+
+  // | 5  | 6  | 7  | 8  |  R1
+  // +----+----+----+----+
+  // | 9  | 10 | 11 | 12 |  R2
+  // +----+----+----+----+
+  // | 13 | 14 | 15 | 16 |  R3
+  // +----+----+----+----+
+  const uint8_t button_number = row_number * 4 + column_number + 1;
+  switch (button_number){
+  case 1: //move	//1
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+	move(1);
+
+    break;
+  case 2: //boom 	//2
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 0);
+	boom(1);
+    break;
+  case 3:
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
+    break;
+  case 4:
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 0);
+    break;
+  case 5: //dir	 	//4
+	 HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, 1);
+	 change_dir(1);
+    break;
+  case 6:
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, 0);
+    break;
+  case 7:
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, 1);
+    break;
+  case 8:
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, 0);
+    break;
+  case 9: // menu curser up
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, 1);
+		if(pageflag==1){
+			if (menu_curser_r > 1){
+				menu_curser_r -= 1;
+			}
+		}
+    break;
+  case 10: // menu cursor down
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, 0);
+		if(pageflag==1){
+			if (menu_curser_r  < 3){
+				menu_curser_r +=1;
+			}
+		}
+    break;
+  case 11:
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, 1);
+    break;
+  case 12: //Dir	//C
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, 0);
+		change_dir(2);
+    break;
+  case 13: //goto menu
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
+		if(pageflag == 0){
+			starter_to_main = 1;
+		}
+    break;
+  case 14:
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0);
+    break;
+  case 15: //Boom	//#
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
+		boom(2);
+    break;
+  case 16: //move	//D
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 0);
+		move(2);
+    break;
+
+  default:
+    break;
+  }
+}
 
 
 unsigned char obstacle[] = {
@@ -294,17 +445,13 @@ void programInit() {
 	LiquidCrystal(GPIOC, GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_9, GPIO_PIN_8, GPIO_PIN_7);
 	begin(20, 4);
 
-
-//temp
+	//temp
 //	char data[100];
 //	int n = sprintf(data, "Salammmmm");
 //	setCursor(5, 1);
+	//	print(data);
 
 
-
-//	createChar(num_health, health);
-//	createChar(num_arrow_vert, arrow_vert);
-//	createChar(num_arrow_hori, arrow_hori);
 
 	createChar(num_tank_right, tank_right);
 	createChar(num_tank_up, tank_up);
@@ -314,27 +461,39 @@ void programInit() {
 	createChar(num_chance, chance);
 	createChar(num_health, health);
 	createChar(num_arrow, arrow);
+	starter();
 
+//	init_board();
 
-	init_board();
+//	update_board();
 
+}
 
+void starter(){
+	setCursor(0, 2);
+	write(num_tank_right, tank_right);
 
-//	lcd[0][0] = num_tank_right; //heart
-//	lcd[1][0] = num_tank_up; //chance
-//	lcd[2][0] = num_tank_down; //obstacle
-//	lcd[3][0] = num_tank_left; //tank_left
-//	lcd[4][0] = num_wall; //wall
-//	lcd[5][0] = num_extra_bullet; //extrab
-//	lcd[6][0] = num_chance; //chance
-//	lcd[7][0] = num_obstacle; //obstacle
-//	lcd[8][0] = num_health; //health
-//	lcd[9][0] = num_arrow; //chance
+	setCursor(1, 1);
+	print("#");
 
+	setCursor(1, 2);
+	print("#");
 
+	char data[100];
+	int n = sprintf(data, "TANK BATTLE");
+	setCursor(4, 1);
+	print(data);
+	setCursor(4, 2);
+	n = sprintf(data, "===========");
+	print(data);
 
-	update_board();
-//	print(data);
+	setCursor(18, 1);
+	print("#");
+	setCursor(18, 2);
+	print("#");
+
+	setCursor(19, 1);
+	write(num_tank_left, tank_left);
 
 }
 
@@ -398,30 +557,92 @@ void init_board(){
 // D13 -> C8
 // D14 -> C7
 
-void update_board(){
+void update_lcd(){
+	if(pageflag==2){
+		for (int i = 0; i < 20; i++) {
+			for (int j = 0; j < 4; j++) {
+				setCursor(i, j);
+				if(lcd[i][j] != 9 && lcd[i][j] != 10 && lcd[i][j] != 0){
+					write(lcd[i][j]);
+				}
+				else if (lcd[i][j] == 9 ){
+					print("#");
+				}
+				else if (lcd[i][j] == 10 ){
+					print("I");
+				}
+				else if (lcd[i][j] == 0){
+					print(" ");
 
-    for (int i = 0; i < 20; i++) {
-        for (int j = 0; j < 4; j++) {
-        	setCursor(i, j);
-        	if(lcd[i][j] != 9 && lcd[i][j] != 10 && lcd[i][j] != 0){
-        		write(lcd[i][j]);
-        	}
-        	else if (lcd[i][j] == 9 ){
-        		print("#");
-        	}
-        	else if (lcd[i][j] == 10 ){
-        		print("I");
-        	}
-        	else if (lcd[i][j] == 0){
-        		print(" ");
+				}
+				else{
+					print("U");
 
-        	}
-        	else{
-        		print("U");
+				}
+			}
+		}
+	}
+	else if (starter_to_main==1){
+		remove_starter();
+		menu();
+	}
+	else if (pageflag==1){
+		menu();
 
-        	}
-        }
-    }
+	}
+}
+void remove_starter(){
+	if (starter_to_main == 1){
+			setCursor(0, 2);
+			print(" ");
+
+			setCursor(1, 1);
+			print(" ");
+
+			setCursor(1, 2);
+			print(" ");
+
+			char data[100];
+			int n = sprintf(data, "           ");
+			setCursor(4, 1);
+			print(data);
+			setCursor(4, 2);
+			n = sprintf(data, "           ");
+			print(data);
+
+			setCursor(18, 1);
+			print(" ");
+			setCursor(18, 2);
+			print(" ");
+
+			setCursor(19, 1);
+			print(" ");
+			starter_to_main = 0;
+			pageflag = 1;
+
+		}
+}
+void menu(){
+
+	setCursor(1, 0);
+	print("MENU:");
+	setCursor(1, 1);
+	print("PLAY");
+	setCursor(1, 2);
+	print("SETTING");
+	setCursor(1, 3);
+	print("ABOUT");
+	setCursor(0, 0);
+	print(" ");
+	setCursor(0, 1);
+	print(" ");
+	setCursor(0, 2);
+	print(" ");
+	setCursor(0, 3);
+	print(" ");
+	setCursor(0, menu_curser_r);
+	print(">");
+
 }
 
 void programLoop() {
@@ -429,6 +650,13 @@ void programLoop() {
     setNumber(1234);
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+
+	if (htim->Instance == TIM2) {
+		update_lcd();
+	}
+
+}
 
 
 void change_dir(int player){

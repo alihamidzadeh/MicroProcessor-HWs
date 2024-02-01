@@ -11,3 +11,4 @@
 ../Core/Src/stm32f3xx_it.c:218:6:EXTI1_IRQHandler	8	static
 ../Core/Src/stm32f3xx_it.c:232:6:EXTI2_TSC_IRQHandler	8	static
 ../Core/Src/stm32f3xx_it.c:246:6:EXTI3_IRQHandler	8	static
+../Core/Src/stm32f3xx_it.c:260:6:TIM2_IRQHandler	8	static
