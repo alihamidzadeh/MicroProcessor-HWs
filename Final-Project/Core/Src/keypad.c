@@ -11,7 +11,7 @@ volatile uint32_t last_gpio_exti;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (last_gpio_exti + 200 > HAL_GetTick()) // Simple button debouncing
+  if (last_gpio_exti + 70 > HAL_GetTick()) // Simple button debouncing
   {
     return;
   }
@@ -69,55 +69,61 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   // | 13 | 14 | 15 | 16 |  R3
   // +----+----+----+----+
   const uint8_t button_number = row_number * 4 + column_number + 1;
-  switch (button_number)
-  {
-  case 1:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+  switch (button_number){
+  case 1: //move	//1
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 1);
+	move(1);
+
     break;
-  case 2:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 0);
+  case 2: //boom 	//2
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_15, 0);
+	boom(1);
     break;
   case 3:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 1);
     break;
   case 4:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 0);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_14, 0);
     break;
-  case 5:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
+  case 5: //dir	 	//4
+	 HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, 1);
+	 change_dir(1);
     break;
   case 6:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 0);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_13, 0);
     break;
   case 7:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 1);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, 1);
     break;
   case 8:
-//	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0);
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, 0);
     break;
   case 9:
-    /* code */
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, 1);
     break;
   case 10:
-    /* code */
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_11, 0);
     break;
   case 11:
-    /* code */
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, 1);
     break;
-  case 12:
-    /* code */
+  case 12: //Dir	//C
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, 0);
+		change_dir(2);
     break;
   case 13:
-    /* code */
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 1);
     break;
   case 14:
-    /* code */
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0);
     break;
-  case 15:
-    /* code */
+  case 15: //Boom	//#
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
+		boom(2);
     break;
-  case 16:
-    /* code */
+  case 16: //move	//D
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 0);
+		move(2);
     break;
 
   default:

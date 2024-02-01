@@ -1,3 +1,4 @@
+"./Core/Src/LiquidCrystal.o"
 "./Core/Src/keypad.o"
 "./Core/Src/main.o"
 "./Core/Src/program.o"

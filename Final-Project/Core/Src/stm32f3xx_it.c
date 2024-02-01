@@ -208,44 +208,7 @@ void EXTI0_IRQHandler(void)
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
-  for (int i = 0; i < 4; i++){
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
 
-	  if (i==0){ //satr 0om
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_0)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
-		  }
-	  }
-	  else if (i==1){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_0)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
-		  }
-	  }
-	  else if (i==2){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_0)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
-		  }
-	  }
-	  else if (i==3){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_0)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_11);
-		  }
-	  }
-
-//	  HAL_MAX_DELAY(10);
-  }
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
-	while(HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_0));
   /* USER CODE END EXTI0_IRQn 1 */
 }
 
@@ -259,45 +222,22 @@ void EXTI1_IRQHandler(void)
   /* USER CODE END EXTI1_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
   /* USER CODE BEGIN EXTI1_IRQn 1 */
-  for (int i = 0; i < 4; i++){
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
-	  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_RESET);
 
-	  if (i==0){ //satr 0om
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_1)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_8);
-		  }
-	  }
-	  else if (i==1){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_1)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
-		  }
-	  }
-	  else if (i==2){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_1)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
-		  }
-	  }
-	  else if (i==3){
-		  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
-		  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_1)){
-			  HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_11);
-		  }
-	  }
-
-//	  HAL_MAX_DELAY(10);
-  }
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
-	while(HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_0)); //fek konam bayad pin1 bashe
   /* USER CODE END EXTI1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI line2 and Touch Sense controller.
+  */
+void EXTI2_TSC_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI2_TSC_IRQn 0 */
+
+  /* USER CODE END EXTI2_TSC_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_2);
+  /* USER CODE BEGIN EXTI2_TSC_IRQn 1 */
+
+  /* USER CODE END EXTI2_TSC_IRQn 1 */
 }
 
 /**

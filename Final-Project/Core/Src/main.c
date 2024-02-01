@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "LiquidCrystal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,12 +96,13 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_PCD_Init();
   /* USER CODE BEGIN 2 */
+  programInit();
+
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_10, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_SET);
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_13, GPIO_PIN_SET);
 
-  programInit();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -111,7 +112,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  programLoop();
+//	  programLoop();
+	  update_board();
+
   }
   /* USER CODE END 3 */
 }
@@ -383,6 +386,9 @@ static void MX_GPIO_Init(void)
 
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_TSC_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_TSC_IRQn);
 
   HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI3_IRQn);
