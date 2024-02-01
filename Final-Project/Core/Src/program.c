@@ -25,16 +25,16 @@ int numbers[4] = {0,0,0,0}; //show value of states
 
 seven_segment_type seven_segment = {
 	.digit_activators={
-		   {.port=GPIOB, .pin=GPIO_PIN_2},
-		   {.port=GPIOB, .pin=GPIO_PIN_0},
-		   {.port=GPIOC, .pin=GPIO_PIN_4},
-		   {.port=GPIOA, .pin=GPIO_PIN_4}},
+		   {.port=GPIOB, .pin=GPIO_PIN_2}, //D4
+		   {.port=GPIOB, .pin=GPIO_PIN_0}, //D3
+		   {.port=GPIOC, .pin=GPIO_PIN_4}, //D2
+		   {.port=GPIOA, .pin=GPIO_PIN_4}}, //D1
 
 	.BCD_input={
-			{.port=GPIOC, .pin=GPIO_PIN_6},
-			{.port=GPIOD, .pin=GPIO_PIN_15},
-			{.port=GPIOD, .pin=GPIO_PIN_9},
-			{.port=GPIOB, .pin=GPIO_PIN_13}},
+			{.port=GPIOC, .pin=GPIO_PIN_6}, //A
+			{.port=GPIOD, .pin=GPIO_PIN_15}, //B
+			{.port=GPIOD, .pin=GPIO_PIN_9}, //C
+			{.port=GPIOB, .pin=GPIO_PIN_13}}, //D
 	.digits={0, 0, 0, 0},
 	.number = 0};
 
