@@ -8,7 +8,7 @@ int pageflag = 0;
 int menu_curser_r = 1;
 
 extern TIM_HandleTypeDef htim2;
-
+int game_started = 0;
 
 
 // Input pull down rising edge trigger interrupt pins:
@@ -20,7 +20,7 @@ GPIO_TypeDef *const Column_ports[] = {GPIOD, GPIOD, GPIOD, GPIOD};
 const uint16_t Column_pins[] = {GPIO_PIN_10, GPIO_PIN_11, GPIO_PIN_12, GPIO_PIN_13};
 volatile uint32_t last_gpio_exti;
 
-int starter_to_main = 0;
+int change_page = 0;
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
@@ -136,12 +136,32 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     break;
   case 13: //goto menu
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
-		if(pageflag == 0){
-			starter_to_main = 1;
+		if(pageflag == 0 || pageflag == 3 || pageflag == 4){
+			change_page = 1;
+			pageflag = 1;
 		}
     break;
-  case 14:
+  case 14: // select in menu
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0);
+		if(pageflag == 1){
+			if(menu_curser_r == 1){
+				pageflag = 2;
+				change_page = 1;
+				game_started = 1;
+			}
+			else if(menu_curser_r == 2){
+				pageflag = 3;
+				change_page = 1;
+
+			}
+
+			else if(menu_curser_r == 3){
+				pageflag = 4;
+				change_page = 1;
+
+			}
+		}
+
     break;
   case 15: //Boom	//#
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_8, 1);
@@ -465,7 +485,6 @@ void programInit() {
 
 //	init_board();
 
-//	update_board();
 
 }
 
@@ -558,6 +577,14 @@ void init_board(){
 // D14 -> C7
 
 void update_lcd(){
+	if (game_started==1){
+		clear();
+		init_board();
+		change_page = 0;
+		game_started = 0;
+	}
+
+
 	if(pageflag==2){
 		for (int i = 0; i < 20; i++) {
 			for (int j = 0; j < 4; j++) {
@@ -582,46 +609,73 @@ void update_lcd(){
 			}
 		}
 	}
-	else if (starter_to_main==1){
-		remove_starter();
-		menu();
+	else if (change_page==1){
+		clear();
+		change_page = 0;
+	}
+
+	else if (change_page==1){
+		clear();
+		change_page = 0;
 	}
 	else if (pageflag==1){
 		menu();
 
 	}
+	else if (pageflag==3){
+		setting_page();
+	}
+	else if (pageflag==4){
+		about_page();
+	}
+
 }
-void remove_starter(){
-	if (starter_to_main == 1){
-			setCursor(0, 2);
-			print(" ");
+void about_page(){
+	setCursor(6, 1);
+	print("POURIA");
+	setCursor(8, 2);
+	print("ALI");
+	setCursor(5, 3);
+	print("12:12:12");
 
-			setCursor(1, 1);
-			print(" ");
-
-			setCursor(1, 2);
-			print(" ");
-
-			char data[100];
-			int n = sprintf(data, "           ");
-			setCursor(4, 1);
-			print(data);
-			setCursor(4, 2);
-			n = sprintf(data, "           ");
-			print(data);
-
-			setCursor(18, 1);
-			print(" ");
-			setCursor(18, 2);
-			print(" ");
-
-			setCursor(19, 1);
-			print(" ");
-			starter_to_main = 0;
-			pageflag = 1;
-
-		}
 }
+
+void setting_page(){
+	setCursor(6, 1);
+	print("KHALI");
+
+}
+//void remove_starter(){
+//	if (change_page == 1){
+//			setCursor(0, 2);
+//			print(" ");
+//
+//			setCursor(1, 1);
+//			print(" ");
+//
+//			setCursor(1, 2);
+//			print(" ");
+//
+//			char data[100];
+//			int n = sprintf(data, "           ");
+//			setCursor(4, 1);
+//			print(data);
+//			setCursor(4, 2);
+//			n = sprintf(data, "           ");
+//			print(data);
+//
+//			setCursor(18, 1);
+//			print(" ");
+//			setCursor(18, 2);
+//			print(" ");
+//
+//			setCursor(19, 1);
+//			print(" ");
+//			pageflag = 1;
+//
+//		}
+//}
+
 void menu(){
 
 	setCursor(1, 0);
