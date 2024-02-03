@@ -22,6 +22,21 @@ volatile uint32_t last_gpio_exti;
 
 int change_page = 0;
 
+extern RTC_HandleTypeDef hrtc;
+
+RTC_TimeTypeDef mytime ;
+
+void set_start_time(int hour, int minute, int second){
+
+	RTC_TimeTypeDef start_t ;
+
+	start_t.Hours = 20;
+	start_t.Minutes = 20;
+	start_t.Seconds = 20;
+
+    HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if (last_gpio_exti + 70 > HAL_GetTick()) // Simple button debouncing
@@ -472,7 +487,7 @@ void programInit() {
 	//	print(data);
 
 
-
+	set_start_time(20, 20, 20);
 	createChar(num_tank_right, tank_right);
 	createChar(num_tank_up, tank_up);
 	createChar(num_tank_down, tank_down);
@@ -481,7 +496,8 @@ void programInit() {
 	createChar(num_chance, chance);
 	createChar(num_health, health);
 	createChar(num_arrow, arrow);
-	starter();
+//	starter();
+	pageflag=0;
 
 //	init_board();
 
@@ -584,6 +600,10 @@ void update_lcd(){
 		game_started = 0;
 	}
 
+	if(pageflag==0){
+		starter();
+	}
+
 
 	if(pageflag==2){
 		for (int i = 0; i < 20; i++) {
@@ -635,8 +655,13 @@ void about_page(){
 	print("POURIA");
 	setCursor(8, 2);
 	print("ALI");
+	char timeStr[100];
 	setCursor(5, 3);
-	print("12:12:12");
+	print("          ");
+	HAL_RTC_GetTime(&hrtc, &mytime, RTC_FORMAT_BIN);
+	sprintf(timeStr, "%02d:%02d:%02d", mytime.Hours, mytime.Minutes, mytime.Seconds);
+	setCursor(5, 3);
+	print(timeStr);
 
 }
 
@@ -706,8 +731,11 @@ void programLoop() {
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
-	if (htim->Instance == TIM2) {
-		update_lcd();
+	if (htim->Instance == TIM4) {
+//		update_lcd();
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_12);
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_11);
+		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
 	}
 
 }
@@ -816,3 +844,32 @@ void move(int player){
 
 
 }
+
+
+char character;
+char input[50];
+int  index_arr = 0;
+extern UART_HandleTypeDef huart1;
+
+void uart_rx_enable_it(void) {
+	HAL_UART_Receive_IT(&huart1, &character, 1);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	char data[100];
+
+    if (huart->Instance == USART1){
+    	if(character != 10){
+    		input[index_arr++] = character;
+    	}else{
+			input[index_arr++] = '\0';
+			index_arr = 0;
+			int value;
+			HAL_RTC_GetTime(&hrtc, &mytime, RTC_FORMAT_BIN);
+//			sprintf(timeStr, "%02d:%02d:%02d", mytime.Hours, mytime.Minutes, mytime.Seconds);
+		}
+		uart_rx_enable_it();
+    }
+}
+
+

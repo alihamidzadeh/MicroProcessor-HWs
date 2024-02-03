@@ -60,8 +60,8 @@ all: main-build
 main-build: Final-Project.elf secondary-outputs
 
 # Tool invocations
-Final-Project.elf Final-Project.map: $(OBJS) $(USER_OBJS) D:\University\uniSemersters\semester7\MicroContorolers\Lab\final_project\MicroProcessor-HWs\Final-Project\STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "Final-Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\University\uniSemersters\semester7\MicroContorolers\Lab\final_project\MicroProcessor-HWs\Final-Project\STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Final-Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Final-Project.elf Final-Project.map: $(OBJS) $(USER_OBJS) /home/pouria_nazemi/Pouria/riz/MicroProcessor-HWs/Final-Project/STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "Final-Project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/pouria_nazemi/Pouria/riz/MicroProcessor-HWs/Final-Project/STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="Final-Project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
