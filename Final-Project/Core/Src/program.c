@@ -7,7 +7,7 @@
 int pageflag = 0;
 int menu_curser_r = 1;
 
-extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim4;
 int game_started = 0;
 
 
@@ -479,6 +479,7 @@ void setNumber(int number){
 void programInit() {
 	LiquidCrystal(GPIOC, GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_9, GPIO_PIN_8, GPIO_PIN_7);
 	begin(20, 4);
+//    setNumber(1234);
 
 	//temp
 //	char data[100];
@@ -609,23 +610,16 @@ void update_lcd(){
 		for (int i = 0; i < 20; i++) {
 			for (int j = 0; j < 4; j++) {
 				setCursor(i, j);
-				if(lcd[i][j] != 9 && lcd[i][j] != 10 && lcd[i][j] != 0){
+				if(lcd[i][j] != 9 && lcd[i][j] != 10 && lcd[i][j] != 0)
 					write(lcd[i][j]);
-				}
-				else if (lcd[i][j] == 9 ){
+				else if (lcd[i][j] == 9)
 					print("#");
-				}
-				else if (lcd[i][j] == 10 ){
+				else if (lcd[i][j] == 10)
 					print("I");
-				}
-				else if (lcd[i][j] == 0){
+				else if (lcd[i][j] == 0)
 					print(" ");
-
-				}
-				else{
+				else
 					print("U");
-
-				}
 			}
 		}
 	}
@@ -726,7 +720,8 @@ void menu(){
 
 void programLoop() {
     seven_segment_refresh();
-    setNumber(1234);
+
+    update_lcd();
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -767,6 +762,31 @@ void boom(int player){
 
 }
 
+int sev_result = 0;
+void collect(uint8_t pos, int player){
+	if (pos == num_extra_bullet){
+		if (player == 1)
+			player1.arrow+=1;
+		else
+			player2.arrow+=1;
+	}else if (pos == num_health){
+		if (player == 1)
+			player1.health+=1;
+		else
+			player2.health+=1;
+	}
+
+//	uint8_t a = player2.arrow;
+//	uint8_t b = player2.health;
+//	uint8_t c = player1.arrow;
+//	uint8_t d = player1.health;
+//	int results[4] = {d,c,b,a};
+//	seven_segment_set_num(results);
+
+	sev_result = player2.arrow * 1000 + player2.health * 100 + player1.arrow * 10 + player1.health;
+	setNumber(sev_result);
+}
+
 void move(int player){
 	int dir;
 
@@ -776,7 +796,8 @@ void move(int player){
 			int curr_col = player1.position_x;
 			int curr_row = player1.position_y;
 			if(curr_col - 1 >= 0 && lcd[curr_col - 1][curr_row] != num_obstacle && lcd[curr_col - 1][curr_row] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col - 1][curr_row], 1); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col - 1][curr_row] = player1.direction;
 				player1.position_x = player1.position_x - 1;
 			}
@@ -784,7 +805,8 @@ void move(int player){
 			int curr_col = player1.position_x;
 			int curr_row = player1.position_y;
 			if(curr_row - 1 >= 0 && lcd[curr_col][curr_row - 1] != num_obstacle && lcd[curr_col][curr_row - 1] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col][curr_row - 1], 1); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col][curr_row - 1] = player1.direction;
 				player1.position_y = player1.position_y - 1;
 			}
@@ -792,7 +814,8 @@ void move(int player){
 			int curr_col = player1.position_x;
 			int curr_row = player1.position_y;
 			if(curr_col + 1 <= 19 && lcd[curr_col + 1][curr_row] != num_obstacle && lcd[curr_col + 1][curr_row] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col + 1][curr_row], 1); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col + 1][curr_row] = player1.direction;
 				player1.position_x = player1.position_x + 1;
 			}
@@ -800,7 +823,8 @@ void move(int player){
 			int curr_col = player1.position_x;
 			int curr_row = player1.position_y;
 			if(curr_row + 1 <= 3 && lcd[curr_col][curr_row + 1] != num_obstacle && lcd[curr_col][curr_row + 1] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col][curr_row + 1], 1); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col][curr_row + 1] = player1.direction;
 				player1.position_y = player1.position_y + 1;
 			}
@@ -811,7 +835,8 @@ void move(int player){
 			int curr_col = player2.position_x;
 			int curr_row = player2.position_y;
 			if(curr_col - 1 >= 0 && lcd[curr_col - 1][curr_row] != num_obstacle && lcd[curr_col - 1][curr_row] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col - 1][curr_row], 2); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col - 1][curr_row] = player2.direction;
 				player2.position_x = player2.position_x - 1;
 			}
@@ -819,7 +844,8 @@ void move(int player){
 			int curr_col = player2.position_x;
 			int curr_row = player2.position_y;
 			if(curr_row - 1 >= 0 && lcd[curr_col][curr_row - 1] != num_obstacle && lcd[curr_col][curr_row - 1] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col][curr_row - 1], 2); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col][curr_row - 1] = player2.direction;
 				player2.position_y = player2.position_y - 1;
 			}
@@ -827,7 +853,8 @@ void move(int player){
 			int curr_col = player2.position_x;
 			int curr_row = player2.position_y;
 			if(curr_col + 1 <= 19 && lcd[curr_col + 1][curr_row] != num_obstacle && lcd[curr_col + 1][curr_row] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col + 1][curr_row], 2); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col + 1][curr_row] = player2.direction;
 				player2.position_x = player2.position_x + 1;
 			}
@@ -835,16 +862,14 @@ void move(int player){
 			int curr_col = player2.position_x;
 			int curr_row = player2.position_y;
 			if(curr_row + 1 <= 3 && lcd[curr_col][curr_row + 1] != num_obstacle && lcd[curr_col][curr_row + 1] != num_wall){
-				lcd[curr_col][curr_row] = 0; //TODO add prizes
+				collect(lcd[curr_col][curr_row + 1], 2); //TODO add prizes
+				lcd[curr_col][curr_row] = 0;
 				lcd[curr_col][curr_row + 1] = player2.direction;
 				player2.position_y = player2.position_y + 1;
 			}
 		}
 	}
-
-
 }
-
 
 char character;
 char input[50];

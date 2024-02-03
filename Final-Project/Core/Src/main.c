@@ -126,8 +126,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  programLoop();
-	  update_lcd();
+	  programLoop();
 //	  HAL_UART_Transmit(&huart1, '1', 1, 100);
 
   }
