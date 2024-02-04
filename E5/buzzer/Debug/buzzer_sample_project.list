@@ -39,13 +39,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  17 .debug_macro  0001d5bf  00000000  00000000  00033d08  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   00010620  00000000  00000000  000512c7  2**0
+ 18 .debug_line   00010968  00000000  00000000  000512c7  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000b3aee  00000000  00000000  000618e7  2**0
+ 19 .debug_str    000b3aad  00000000  00000000  00061c2f  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000050  00000000  00000000  001153d5  2**0
+ 20 .comment      00000050  00000000  00000000  001156dc  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  00003720  00000000  00000000  00115428  2**2
+ 21 .debug_frame  00003720  00000000  00000000  0011572c  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -2671,48 +2671,107 @@ void SystemInit(void)
  80011a4:	e000ed00 	.word	0xe000ed00
 
 080011a8 <Reset_Handler>:
+
+    .section	.text.Reset_Handler
+	.weak	Reset_Handler
+	.type	Reset_Handler, %function
+Reset_Handler:
+  ldr   sp, =_estack    /* Atollic update: set stack pointer */
  80011a8:	f8df d034 	ldr.w	sp, [pc, #52]	; 80011e0 <LoopForever+0x2>
+
+/* Copy the data segment initializers from flash to SRAM */
+  ldr r0, =_sdata
  80011ac:	480d      	ldr	r0, [pc, #52]	; (80011e4 <LoopForever+0x6>)
+  ldr r1, =_edata
  80011ae:	490e      	ldr	r1, [pc, #56]	; (80011e8 <LoopForever+0xa>)
+  ldr r2, =_sidata
  80011b0:	4a0e      	ldr	r2, [pc, #56]	; (80011ec <LoopForever+0xe>)
+  movs r3, #0
  80011b2:	2300      	movs	r3, #0
+  b LoopCopyDataInit
  80011b4:	e002      	b.n	80011bc <LoopCopyDataInit>
 
 080011b6 <CopyDataInit>:
+
+CopyDataInit:
+  ldr r4, [r2, r3]
  80011b6:	58d4      	ldr	r4, [r2, r3]
+  str r4, [r0, r3]
  80011b8:	50c4      	str	r4, [r0, r3]
+  adds r3, r3, #4
  80011ba:	3304      	adds	r3, #4
 
 080011bc <LoopCopyDataInit>:
+
+LoopCopyDataInit:
+  adds r4, r0, r3
  80011bc:	18c4      	adds	r4, r0, r3
+  cmp r4, r1
  80011be:	428c      	cmp	r4, r1
+  bcc CopyDataInit
  80011c0:	d3f9      	bcc.n	80011b6 <CopyDataInit>
+  
+/* Zero fill the bss segment. */
+  ldr r2, =_sbss
  80011c2:	4a0b      	ldr	r2, [pc, #44]	; (80011f0 <LoopForever+0x12>)
+  ldr r4, =_ebss
  80011c4:	4c0b      	ldr	r4, [pc, #44]	; (80011f4 <LoopForever+0x16>)
+  movs r3, #0
  80011c6:	2300      	movs	r3, #0
+  b LoopFillZerobss
  80011c8:	e001      	b.n	80011ce <LoopFillZerobss>
 
 080011ca <FillZerobss>:
+
+FillZerobss:
+  str  r3, [r2]
  80011ca:	6013      	str	r3, [r2, #0]
+  adds r2, r2, #4
  80011cc:	3204      	adds	r2, #4
 
 080011ce <LoopFillZerobss>:
+
+LoopFillZerobss:
+  cmp r2, r4
  80011ce:	42a2      	cmp	r2, r4
+  bcc FillZerobss
  80011d0:	d3fb      	bcc.n	80011ca <FillZerobss>
+
+/* Call the clock system intitialization function.*/
+    bl  SystemInit
  80011d2:	f7ff ffd7 	bl	8001184 <SystemInit>
+/* Call static constructors */
+    bl __libc_init_array
  80011d6:	f004 fbfd 	bl	80059d4 <__libc_init_array>
+/* Call the application's entry point.*/
+	bl	main
  80011da:	f7fe fff5 	bl	80001c8 <main>
 
 080011de <LoopForever>:
+
+LoopForever:
+    b LoopForever
  80011de:	e7fe      	b.n	80011de <LoopForever>
+  ldr   sp, =_estack    /* Atollic update: set stack pointer */
  80011e0:	2000a000 	.word	0x2000a000
+  ldr r0, =_sdata
  80011e4:	20000000 	.word	0x20000000
+  ldr r1, =_edata
  80011e8:	20000018 	.word	0x20000018
+  ldr r2, =_sidata
  80011ec:	08005a84 	.word	0x08005a84
+  ldr r2, =_sbss
  80011f0:	20000018 	.word	0x20000018
+  ldr r4, =_ebss
  80011f4:	20000164 	.word	0x20000164
 
 080011f8 <ADC1_2_IRQHandler>:
+ * @retval : None
+*/
+    .section	.text.Default_Handler,"ax",%progbits
+Default_Handler:
+Infinite_Loop:
+	b	Infinite_Loop
  80011f8:	e7fe      	b.n	80011f8 <ADC1_2_IRQHandler>
 	...
 
@@ -2799,7 +2858,7 @@ __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority, 0U);
  800125c:	2200      	movs	r2, #0
  800125e:	6879      	ldr	r1, [r7, #4]
- 8001260:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 8001260:	f04f 30ff 	mov.w	r0, #4294967295
  8001264:	f000 f90b 	bl	800147e <HAL_NVIC_SetPriority>
     uwTickPrio = TickPriority;
  8001268:	4a06      	ldr	r2, [pc, #24]	; (8001284 <HAL_InitTick+0x5c>)
@@ -3072,7 +3131,7 @@ __STATIC_INLINE uint32_t NVIC_EncodePriority (uint32_t PriorityGroup, uint32_t P
 
   return (
            ((PreemptPriority & (uint32_t)((1UL << (PreemptPriorityBits)) - 1UL)) << SubPriorityBits) |
- 80013f0:	f04f 32ff 	mov.w	r2, #4294967295	; 0xffffffff
+ 80013f0:	f04f 32ff 	mov.w	r2, #4294967295
  80013f4:	69bb      	ldr	r3, [r7, #24]
  80013f6:	fa02 f303 	lsl.w	r3, r2, r3
  80013fa:	43da      	mvns	r2, r3
@@ -3081,7 +3140,7 @@ __STATIC_INLINE uint32_t NVIC_EncodePriority (uint32_t PriorityGroup, uint32_t P
  8001400:	697b      	ldr	r3, [r7, #20]
  8001402:	409a      	lsls	r2, r3
            ((SubPriority     & (uint32_t)((1UL << (SubPriorityBits    )) - 1UL)))
- 8001404:	f04f 31ff 	mov.w	r1, #4294967295	; 0xffffffff
+ 8001404:	f04f 31ff 	mov.w	r1, #4294967295
  8001408:	697b      	ldr	r3, [r7, #20]
  800140a:	fa01 f303 	lsl.w	r3, r1, r3
  800140e:	43d9      	mvns	r1, r3
@@ -3127,7 +3186,7 @@ __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
  8001440:	6053      	str	r3, [r2, #4]
   NVIC_SetPriority (SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */
  8001442:	210f      	movs	r1, #15
- 8001444:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 8001444:	f04f 30ff 	mov.w	r0, #4294967295
  8001448:	f7ff ff8e 	bl	8001368 <__NVIC_SetPriority>
   SysTick->VAL   = 0UL;                                             /* Load the SysTick Counter Value */
  800144c:	4b05      	ldr	r3, [pc, #20]	; (8001464 <SysTick_Config+0x40>)
@@ -12843,7 +12902,7 @@ HAL_StatusTypeDef UART_WaitOnFlagUntilTimeout(UART_HandleTypeDef *huart, uint32_
     /* Check for the Timeout */
     if (Timeout != HAL_MAX_DELAY)
  8005302:	69bb      	ldr	r3, [r7, #24]
- 8005304:	f1b3 3fff 	cmp.w	r3, #4294967295	; 0xffffffff
+ 8005304:	f1b3 3fff 	cmp.w	r3, #4294967295
  8005308:	d045      	beq.n	8005396 <UART_WaitOnFlagUntilTimeout+0xa6>
     {
       if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))

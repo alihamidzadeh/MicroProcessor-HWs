@@ -39,13 +39,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  17 .debug_macro  00021000  00000000  00000000  00043d80  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   0001dfde  00000000  00000000  00064d80  2**0
+ 18 .debug_line   0001e5ab  00000000  00000000  00064d80  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    000c7b94  00000000  00000000  00082d5e  2**0
+ 19 .debug_str    000c7baa  00000000  00000000  0008332b  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .comment      00000050  00000000  00000000  0014a8f2  2**0
+ 20 .comment      00000050  00000000  00000000  0014aed5  2**0
                   CONTENTS, READONLY
- 21 .debug_frame  00006920  00000000  00000000  0014a944  2**2
+ 21 .debug_frame  00006920  00000000  00000000  0014af28  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -4211,7 +4211,7 @@ void *_sbrk(ptrdiff_t incr)
  8001a4a:	220c      	movs	r2, #12
  8001a4c:	601a      	str	r2, [r3, #0]
     return (void *)-1;
- 8001a4e:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
+ 8001a4e:	f04f 33ff 	mov.w	r3, #4294967295
  8001a52:	e009      	b.n	8001a68 <_sbrk+0x54>
   }
 
@@ -4458,7 +4458,7 @@ __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
     HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority, 0U);
  8001b58:	2200      	movs	r2, #0
  8001b5a:	6879      	ldr	r1, [r7, #4]
- 8001b5c:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 8001b5c:	f04f 30ff 	mov.w	r0, #4294967295
  8001b60:	f001 fc27 	bl	80033b2 <HAL_NVIC_SetPriority>
     uwTickPrio = TickPriority;
  8001b64:	4a06      	ldr	r2, [pc, #24]	; (8001b80 <HAL_InitTick+0x5c>)
@@ -4551,7 +4551,7 @@ __weak void HAL_Delay(uint32_t Delay)
   /* Add freq to guarantee minimum wait */
   if (wait < HAL_MAX_DELAY)
  8001bd6:	68fb      	ldr	r3, [r7, #12]
- 8001bd8:	f1b3 3fff 	cmp.w	r3, #4294967295	; 0xffffffff
+ 8001bd8:	f1b3 3fff 	cmp.w	r3, #4294967295
  8001bdc:	d005      	beq.n	8001bea <HAL_Delay+0x26>
   {
     wait += (uint32_t)(uwTickFreq);
@@ -8428,7 +8428,7 @@ __STATIC_INLINE uint32_t NVIC_EncodePriority (uint32_t PriorityGroup, uint32_t P
 
   return (
            ((PreemptPriority & (uint32_t)((1UL << (PreemptPriorityBits)) - 1UL)) << SubPriorityBits) |
- 8003324:	f04f 32ff 	mov.w	r2, #4294967295	; 0xffffffff
+ 8003324:	f04f 32ff 	mov.w	r2, #4294967295
  8003328:	69bb      	ldr	r3, [r7, #24]
  800332a:	fa02 f303 	lsl.w	r3, r2, r3
  800332e:	43da      	mvns	r2, r3
@@ -8437,7 +8437,7 @@ __STATIC_INLINE uint32_t NVIC_EncodePriority (uint32_t PriorityGroup, uint32_t P
  8003334:	697b      	ldr	r3, [r7, #20]
  8003336:	409a      	lsls	r2, r3
            ((SubPriority     & (uint32_t)((1UL << (SubPriorityBits    )) - 1UL)))
- 8003338:	f04f 31ff 	mov.w	r1, #4294967295	; 0xffffffff
+ 8003338:	f04f 31ff 	mov.w	r1, #4294967295
  800333c:	697b      	ldr	r3, [r7, #20]
  800333e:	fa01 f303 	lsl.w	r3, r1, r3
  8003342:	43d9      	mvns	r1, r3
@@ -8483,7 +8483,7 @@ __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
  8003374:	6053      	str	r3, [r2, #4]
   NVIC_SetPriority (SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */
  8003376:	210f      	movs	r1, #15
- 8003378:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 8003378:	f04f 30ff 	mov.w	r0, #4294967295
  800337c:	f7ff ff8e 	bl	800329c <__NVIC_SetPriority>
   SysTick->VAL   = 0UL;                                             /* Load the SysTick Counter Value */
  8003380:	4b05      	ldr	r3, [pc, #20]	; (8003398 <SysTick_Config+0x40>)
@@ -19399,7 +19399,7 @@ HAL_StatusTypeDef UART_WaitOnFlagUntilTimeout(UART_HandleTypeDef *huart, uint32_
     /* Check for the Timeout */
     if (Timeout != HAL_MAX_DELAY)
  80078ce:	69bb      	ldr	r3, [r7, #24]
- 80078d0:	f1b3 3fff 	cmp.w	r3, #4294967295	; 0xffffffff
+ 80078d0:	f1b3 3fff 	cmp.w	r3, #4294967295
  80078d4:	d045      	beq.n	8007962 <UART_WaitOnFlagUntilTimeout+0xa6>
     {
       if (((HAL_GetTick() - Tickstart) > Timeout) || (Timeout == 0U))
@@ -20744,7 +20744,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  8008108:	89a3      	ldrh	r3, [r4, #12]
  800810a:	f043 0340 	orr.w	r3, r3, #64	; 0x40
  800810e:	81a3      	strh	r3, [r4, #12]
- 8008110:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 8008110:	f04f 30ff 	mov.w	r0, #4294967295
  8008114:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
  8008118:	6921      	ldr	r1, [r4, #16]
  800811a:	464a      	mov	r2, r9
@@ -20805,7 +20805,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  8008196:	b920      	cbnz	r0, 80081a2 <_svfiprintf_r+0x2e>
  8008198:	230c      	movs	r3, #12
  800819a:	603b      	str	r3, [r7, #0]
- 800819c:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 800819c:	f04f 30ff 	mov.w	r0, #4294967295
  80081a0:	e0d1      	b.n	8008346 <_svfiprintf_r+0x1d2>
  80081a2:	2340      	movs	r3, #64	; 0x40
  80081a4:	616b      	str	r3, [r5, #20]
@@ -20840,7 +20840,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  80081f2:	2b00      	cmp	r3, #0
  80081f4:	f000 80a2 	beq.w	800833c <_svfiprintf_r+0x1c8>
  80081f8:	2300      	movs	r3, #0
- 80081fa:	f04f 32ff 	mov.w	r2, #4294967295	; 0xffffffff
+ 80081fa:	f04f 32ff 	mov.w	r2, #4294967295
  80081fe:	e9cd 2305 	strd	r2, r3, [sp, #20]
  8008202:	f10a 0a01 	add.w	sl, sl, #1
  8008206:	9304      	str	r3, [sp, #16]
@@ -20907,7 +20907,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  8008296:	9203      	str	r2, [sp, #12]
  8008298:	2b00      	cmp	r3, #0
  800829a:	bfb8      	it	lt
- 800829c:	f04f 33ff 	movlt.w	r3, #4294967295	; 0xffffffff
+ 800829c:	f04f 33ff 	movlt.w	r3, #4294967295
  80082a0:	3402      	adds	r4, #2
  80082a2:	9305      	str	r3, [sp, #20]
  80082a4:	f8df a0c8 	ldr.w	sl, [pc, #200]	; 8008370 <_svfiprintf_r+0x1fc>
@@ -21068,7 +21068,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  8008412:	47c0      	blx	r8
  8008414:	3001      	adds	r0, #1
  8008416:	d103      	bne.n	8008420 <_printf_common+0xac>
- 8008418:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 8008418:	f04f 30ff 	mov.w	r0, #4294967295
  800841c:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
  8008420:	3501      	adds	r5, #1
  8008422:	e7c6      	b.n	80083b2 <_printf_common+0x3e>
@@ -21216,7 +21216,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  8008590:	bfde      	ittt	le
  8008592:	2330      	movle	r3, #48	; 0x30
  8008594:	f805 3c01 	strble.w	r3, [r5, #-1]
- 8008598:	f105 35ff 	addle.w	r5, r5, #4294967295	; 0xffffffff
+ 8008598:	f105 35ff 	addle.w	r5, r5, #4294967295
  800859c:	1b52      	subs	r2, r2, r5
  800859e:	6122      	str	r2, [r4, #16]
  80085a0:	f8cd a000 	str.w	sl, [sp]
@@ -21227,7 +21227,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  80085ac:	f7ff fee2 	bl	8008374 <_printf_common>
  80085b0:	3001      	adds	r0, #1
  80085b2:	d14c      	bne.n	800864e <_printf_i+0x1fe>
- 80085b4:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
+ 80085b4:	f04f 30ff 	mov.w	r0, #4294967295
  80085b8:	b004      	add	sp, #16
  80085ba:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
  80085be:	4835      	ldr	r0, [pc, #212]	; (8008694 <_printf_i+0x244>)
@@ -21334,7 +21334,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
 0800869c <memcpy>:
  800869c:	440a      	add	r2, r1
  800869e:	4291      	cmp	r1, r2
- 80086a0:	f100 33ff 	add.w	r3, r0, #4294967295	; 0xffffffff
+ 80086a0:	f100 33ff 	add.w	r3, r0, #4294967295
  80086a4:	d100      	bne.n	80086a8 <memcpy+0xc>
  80086a6:	4770      	bx	lr
  80086a8:	b510      	push	{r4, lr}
@@ -21462,7 +21462,7 @@ HAL_StatusTypeDef USB_DevInit(USB_TypeDef *USBx, USB_CfgTypeDef cfg)
  80087b0:	f000 f8ac 	bl	800890c <_sbrk_r>
  80087b4:	3001      	adds	r0, #1
  80087b6:	d101      	bne.n	80087bc <sbrk_aligned+0x38>
- 80087b8:	f04f 34ff 	mov.w	r4, #4294967295	; 0xffffffff
+ 80087b8:	f04f 34ff 	mov.w	r4, #4294967295
  80087bc:	4620      	mov	r0, r4
  80087be:	bd70      	pop	{r4, r5, r6, pc}
  80087c0:	20000640 	.word	0x20000640

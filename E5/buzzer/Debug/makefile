@@ -60,8 +60,8 @@ all: main-build
 main-build: buzzer_sample_project.elf secondary-outputs
 
 # Tool invocations
-buzzer_sample_project.elf buzzer_sample_project.map: $(OBJS) $(USER_OBJS) /home/pouria_nazemi/Pouria/riz/MicroProcessor-HWs/E5/buzzer/STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "buzzer_sample_project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/pouria_nazemi/Pouria/riz/MicroProcessor-HWs/E5/buzzer/STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="buzzer_sample_project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+buzzer_sample_project.elf buzzer_sample_project.map: $(OBJS) $(USER_OBJS) E:\Term\ 7\MicroProcessor\MicroProcessorLab\Micro_git\MicroProcessor-HWs\E5\buzzer\STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "buzzer_sample_project.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Term 7\MicroProcessor\MicroProcessorLab\Micro_git\MicroProcessor-HWs\E5\buzzer\STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="buzzer_sample_project.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

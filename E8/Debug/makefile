@@ -60,8 +60,8 @@ all: main-build
 main-build: E8.elf secondary-outputs
 
 # Tool invocations
-E8.elf E8.map: $(OBJS) $(USER_OBJS) /home/pouria_nazemi/Pouria/riz/MicroProcessor-HWs/E8/STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "E8.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/pouria_nazemi/Pouria/riz/MicroProcessor-HWs/E8/STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E8.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+E8.elf E8.map: $(OBJS) $(USER_OBJS) E:\Term\ 7\MicroProcessor\MicroProcessorLab\Micro_git\MicroProcessor-HWs\E8\STM32F303VCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "E8.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Term 7\MicroProcessor\MicroProcessorLab\Micro_git\MicroProcessor-HWs\E8\STM32F303VCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="E8.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

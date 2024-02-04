@@ -25,6 +25,7 @@ int change_page = 0;
 extern RTC_HandleTypeDef hrtc;
 
 RTC_TimeTypeDef mytime ;
+RTC_DateTypeDef mydate ;
 
 void set_start_time(int hour, int minute, int second){
 
@@ -35,6 +36,17 @@ void set_start_time(int hour, int minute, int second){
 	start_t.Seconds = 20;
 
     HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
+}
+
+void set_start_day(int year, int month, int day){
+
+	RTC_DateTypeDef start_t ;
+
+	start_t.Year = 20;
+	start_t.Month = 20;
+	start_t.Date = 20;
+
+    HAL_RTC_SetDate(&hrtc, &start_t, RTC_FORMAT_BIN);
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -338,7 +350,11 @@ typedef struct {
 	int points;
 	int health;
 	int arrow;
+	int player_id;
+
 }player;
+
+
 
 player player1 = {
 		.player_name = 'A',
@@ -347,7 +363,8 @@ player player1 = {
 		.direction = 1,
 		.points = 0,
 		.health = 3,
-		.arrow = 5
+		.arrow = 5,
+		.player_id = 1
 };
 
 player player2 = {
@@ -357,7 +374,9 @@ player player2 = {
 		.direction = 3,
 		.points = 0,
 		.health = 3,
-		.arrow = 5
+		.arrow = 5,
+		.player_id = 2
+
 };
 
 int num_tank_left = 1;
@@ -475,6 +494,15 @@ void setNumber(int number){
 }
 
 
+struct bullet{
+	int player_id;
+	int position_x;
+	int position_y;
+	int direction;
+	int active;
+};
+
+struct bullet bul[10];
 
 void programInit() {
 	LiquidCrystal(GPIOC, GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_9, GPIO_PIN_8, GPIO_PIN_7);
@@ -489,6 +517,7 @@ void programInit() {
 
 
 	set_start_time(20, 20, 20);
+	set_start_day(20,20,20);
 	createChar(num_tank_right, tank_right);
 	createChar(num_tank_up, tank_up);
 	createChar(num_tank_down, tank_down);
@@ -499,7 +528,14 @@ void programInit() {
 	createChar(num_arrow, arrow);
 //	starter();
 	pageflag=0;
+	for(int i = 0; i < 10; i++){
+		bul[i].active=0;
+		bul[i].direction=1;
+		bul[i].player_id=1;
+		bul[i].position_x=-1;
+		bul[i].position_y=-1;
 
+	}
 //	init_board();
 
 
@@ -650,10 +686,15 @@ void about_page(){
 	setCursor(8, 2);
 	print("ALI");
 	char timeStr[100];
+	char dateStr[100];
+
 	setCursor(5, 3);
 	print("          ");
 	HAL_RTC_GetTime(&hrtc, &mytime, RTC_FORMAT_BIN);
+//	HAL_RTC_GetDate(&hrtc, &mytime, RTC_FORMAT_BIN);
+
 	sprintf(timeStr, "%02d:%02d:%02d", mytime.Hours, mytime.Minutes, mytime.Seconds);
+
 	setCursor(5, 3);
 	print(timeStr);
 
@@ -719,7 +760,7 @@ void menu(){
 }
 
 void programLoop() {
-    seven_segment_refresh();
+//    seven_segment_refresh();
 
     update_lcd();
 }
@@ -728,9 +769,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 	if (htim->Instance == TIM4) {
 //		update_lcd();
+		seven_segment_refresh();
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_12);
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_11);
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
+
 	}
 
 }
@@ -758,7 +801,28 @@ void change_dir(int player){
 
 void boom(int player){
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0); //Temp
-	//TODO
+	int i;
+	for(i = 0; i<10;i++){
+		if(bul[i].active==0)
+			break;
+	}
+	bul[i].active = 1;
+	if (player == 1){
+		bul[i].direction=player1.direction;
+		bul[i].position_x=player1.position_x;
+		bul[i].position_y=player1.position_y;
+		bul[i].player_id=1;
+		player1.arrow--;
+
+	}else{
+		bul[i].direction=player2.direction;
+		bul[i].position_x=player2.position_x;
+		bul[i].position_y=player2.position_y;
+		bul[i].player_id=2;
+		player2.arrow--;
+
+	}
+//entesab be array
 
 }
 
@@ -787,6 +851,16 @@ void collect(uint8_t pos, int player){
 	setNumber(sev_result);
 }
 
+void test shelik{
+	for(i = 0; i<10;i++){
+		if(bul[i].active==1){
+			//check direction
+			// check next
+			// update position and show
+			//active =0
+		}
+	}
+}
 void move(int player){
 	int dir;
 
