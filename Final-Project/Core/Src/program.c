@@ -44,8 +44,8 @@ void set_start_day(int year, int month, int day){
 
 	RTC_DateTypeDef start_t ;
 
-	start_t.Year = 20;
-	start_t.Month = 20;
+	start_t.Year = 2024;
+	start_t.Month = 3;
 	start_t.Date = 20;
 
     HAL_RTC_SetDate(&hrtc, &start_t, RTC_FORMAT_BIN);
@@ -165,7 +165,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     break;
   case 13: //goto menu
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
-		if(pageflag == 0 || pageflag == 3 || pageflag == 4){
+		if(pageflag == 0 || pageflag == 3 || pageflag == 4 || pageflag == 2){
 			change_page = 1;
 			pageflag = 1;
 		}
@@ -519,7 +519,7 @@ void programInit() {
 
 
 	set_start_time(20, 20, 20);
-	set_start_day(20,20,20);
+	set_start_day(2024,2,3);
 	createChar(num_tank_right, tank_right);
 	createChar(num_tank_up, tank_up);
 	createChar(num_tank_down, tank_down);
@@ -693,9 +693,10 @@ void about_page(){
 	setCursor(5, 3);
 	print("          ");
 	HAL_RTC_GetTime(&hrtc, &mytime, RTC_FORMAT_BIN);
-//	HAL_RTC_GetDate(&hrtc, &mytime, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &mytime, RTC_FORMAT_BIN);
 
 	sprintf(timeStr, "%02d:%02d:%02d", mytime.Hours, mytime.Minutes, mytime.Seconds);
+	sprintf(dateStr, "%04d:%02d:%02d", mydate.Year, mydate.Month, mydate.Date);
 
 	setCursor(5, 3);
 	print(timeStr);
@@ -857,7 +858,7 @@ void collect(uint8_t pos, int player){
 }
 
 void test_shelik(){
-	for(i = 0; i<10;i++){
+	for(int i = 0; i<10;i++){
 		if(bul[i].active==1){
 			// 1-> left
 			//2 -> up
@@ -868,25 +869,35 @@ void test_shelik(){
 			// update position and show
 			//active =0
 			if(bul[i].direction == 1){
+				if(lcd[bul[i].position_x][bul[i].position_y] == num_arrow){
+					lcd[bul[i].position_x][bul[i].position_y] = 0;
+				}
 				int new_x = bul[i].position_x - 1;
-				if(new_x > 0){
+
+				if(new_x >= 0){
 					bul[i].position_x = new_x;
 				}
 				else{
 					bul[i].active = 0;
 					continue;
 				}
-				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				int next_element = lcd[bul[i].position_x][bul[i].position_y];
 				if(next_element == num_obstacle){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
 				}
 				else if(next_element == num_tank_down || next_element == num_tank_left || next_element == num_tank_right || next_element == num_tank_up){
 					if(bul[i].player_id == 1){
 						player2.health--;
+						if(player2.health==0){
+								endgame();
+							}
 						player1.points++;
 					}
 					else{
 						player1.health--;
+						if(player1.health==0){
+							endgame();
+						}
 						player2.points++;
 					}
 					bul[i].active = 0;
@@ -900,18 +911,26 @@ void test_shelik(){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
 
 				}
+
 			}
 
+
+
+
 			else if(bul[i].direction == 2){
+				if(lcd[bul[i].position_x][bul[i].position_y] == num_arrow){
+					lcd[bul[i].position_x][bul[i].position_y] = 0;
+				}
+
 				int new_y = bul[i].position_y - 1;
-				if(new_y > 0){
+				if(new_y >= 0){
 					bul[i].position_y = new_y;
 				}
 				else{
 					bul[i].active = 0;
 					continue;
 				}
-				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				int next_element = lcd[bul[i].position_x][bul[i].position_y];
 				if(next_element == num_obstacle){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
 				}
@@ -935,8 +954,18 @@ void test_shelik(){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
 
 				}
+				if(lcd[bul[i].position_x][bul[i].position_y+1] == num_arrow){
+					lcd[bul[i].position_x][bul[i].position_y+1] = 0;
+				}
 			}
+
+
+
+
 			else if(bul[i].direction == 3){
+				if(lcd[bul[i].position_x][bul[i].position_y] == num_arrow){
+					lcd[bul[i].position_x][bul[i].position_y] = 0;
+				}
 				int new_x = bul[i].position_x + 1;
 				if(new_x < 24){
 					bul[i].position_x = new_x;
@@ -945,7 +974,7 @@ void test_shelik(){
 					bul[i].active = 0;
 					continue;
 				}
-				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				int next_element = lcd[bul[i].position_x][bul[i].position_y];
 				if(next_element == num_obstacle){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
 				}
@@ -969,20 +998,28 @@ void test_shelik(){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
 
 				}
+
 			}
 
+
+
+
 			else if(bul[i].direction == 4){
+				if(lcd[bul[i].position_x][bul[i].position_y] == num_arrow){
+					lcd[bul[i].position_x][bul[i].position_y] = 0;
+				}
 				int new_y = bul[i].position_y + 1;
-				if(new_x < 4){
+				if(new_y < 4){
 					bul[i].position_y = new_y;
 				}
 				else{
 					bul[i].active = 0;
 					continue;
 				}
-				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				int next_element = lcd[bul[i].position_x][bul[i].position_y];
 				if(next_element == num_obstacle){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+
 				}
 				else if(next_element == num_tank_down || next_element == num_tank_left || next_element == num_tank_right || next_element == num_tank_up){
 					if(bul[i].player_id == 1){
@@ -1004,9 +1041,20 @@ void test_shelik(){
 				else if(next_element == 0){
 					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
 
+
 				}
+
+
 			}
 		}
+	}
+}
+void endgame(){
+	if(player1.points > player2.points){
+
+	}
+	else{
+
 	}
 }
 
