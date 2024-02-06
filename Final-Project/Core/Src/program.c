@@ -8,6 +8,8 @@ int pageflag = 0;
 int menu_curser_r = 1;
 
 extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim2;
+
 int game_started = 0;
 
 
@@ -775,6 +777,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_10);
 
 	}
+	if(htim->Instance == TIM2){
+		test_shelik();
+	}
 
 }
 
@@ -851,16 +856,161 @@ void collect(uint8_t pos, int player){
 	setNumber(sev_result);
 }
 
-void test shelik{
+void test_shelik(){
 	for(i = 0; i<10;i++){
 		if(bul[i].active==1){
+			// 1-> left
+			//2 -> up
+			//3 ->right
+			//4 -> down
 			//check direction
 			// check next
 			// update position and show
 			//active =0
+			if(bul[i].direction == 1){
+				int new_x = bul[i].position_x - 1;
+				if(new_x > 0){
+					bul[i].position_x = new_x;
+				}
+				else{
+					bul[i].active = 0;
+					continue;
+				}
+				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				if(next_element == num_obstacle){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+				}
+				else if(next_element == num_tank_down || next_element == num_tank_left || next_element == num_tank_right || next_element == num_tank_up){
+					if(bul[i].player_id == 1){
+						player2.health--;
+						player1.points++;
+					}
+					else{
+						player1.health--;
+						player2.points++;
+					}
+					bul[i].active = 0;
+					continue;
+				}
+				else if(next_element == num_wall){
+					bul[i].active = 0;
+					continue;
+				}
+				else if(next_element == 0){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+
+				}
+			}
+
+			else if(bul[i].direction == 2){
+				int new_y = bul[i].position_y - 1;
+				if(new_y > 0){
+					bul[i].position_y = new_y;
+				}
+				else{
+					bul[i].active = 0;
+					continue;
+				}
+				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				if(next_element == num_obstacle){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+				}
+				else if(next_element == num_tank_down || next_element == num_tank_left || next_element == num_tank_right || next_element == num_tank_up){
+					if(bul[i].player_id == 1){
+						player2.health--;
+						player1.points++;
+					}
+					else{
+						player1.health--;
+						player2.points++;
+					}
+					bul[i].active = 0;
+					continue;
+				}
+				else if(next_element == num_wall){
+					bul[i].active = 0;
+					continue;
+				}
+				else if(next_element == 0){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+
+				}
+			}
+			else if(bul[i].direction == 3){
+				int new_x = bul[i].position_x + 1;
+				if(new_x < 24){
+					bul[i].position_x = new_x;
+				}
+				else{
+					bul[i].active = 0;
+					continue;
+				}
+				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				if(next_element == num_obstacle){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+				}
+				else if(next_element == num_tank_down || next_element == num_tank_left || next_element == num_tank_right || next_element == num_tank_up){
+					if(bul[i].player_id == 1){
+						player2.health--;
+						player1.points++;
+					}
+					else{
+						player1.health--;
+						player2.points++;
+					}
+					bul[i].active = 0;
+					continue;
+				}
+				else if(next_element == num_wall){
+					bul[i].active = 0;
+					continue;
+				}
+				else if(next_element == 0){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+
+				}
+			}
+
+			else if(bul[i].direction == 4){
+				int new_y = bul[i].position_y + 1;
+				if(new_x < 4){
+					bul[i].position_y = new_y;
+				}
+				else{
+					bul[i].active = 0;
+					continue;
+				}
+				next_element = lcd[bul[i].position_x][bul[i].position_y];
+				if(next_element == num_obstacle){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+				}
+				else if(next_element == num_tank_down || next_element == num_tank_left || next_element == num_tank_right || next_element == num_tank_up){
+					if(bul[i].player_id == 1){
+						player2.health--;
+						player1.points++;
+					}
+					else{
+						player1.health--;
+						player2.points++;
+					}
+					bul[i].active = 0;
+					continue;
+				}
+
+				else if(next_element == num_wall){
+					bul[i].active = 0;
+					continue;
+				}
+				else if(next_element == 0){
+					lcd[bul[i].position_x][bul[i].position_y] = num_arrow;
+
+				}
+			}
 		}
 	}
 }
+
+
 void move(int player){
 	int dir;
 
