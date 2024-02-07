@@ -11,6 +11,8 @@ extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim2;
 
 int game_started = 0;
+uint32_t for30timer;
+
 
 
 // Input pull down rising edge trigger interrupt pins:
@@ -177,6 +179,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				pageflag = 2;
 				change_page = 1;
 				game_started = 1;
+				for30timer = HAL_GetTick();
 			}
 			else if(menu_curser_r == 2){
 				pageflag = 3;
@@ -205,6 +208,86 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     break;
   }
 }
+typedef struct
+{
+    uint16_t frequency;
+    uint16_t duration;
+} Tone;
+
+#define ARRAY_LENGTH(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+const Tone super_mario_bros[] = {
+	{2637,306}, // E7 x2
+	{   0,153}, // x3 <-- Silence
+	{2637,153}, // E7
+	{   0,153}, // x3
+	{2093,153}, // C7
+	{2637,153}, // E7
+	{   0,153}, // x3
+	{3136,153}, // G7
+	{   0,459}, // x3
+	{1586,153}, // G6
+	{   0,459}, // x3
+
+	{2093,153}, // C7
+	{   0,306}, // x2
+	{1586,153}, // G6
+	{   0,306}, // x2
+	{1319,153}, // E6
+	{   0,306}, // x2
+	{1760,153}, // A6
+	{   0,153}, // x1
+	{1976,153}, // B6
+	{   0,153}, // x1
+	{1865,153}, // AS6
+	{1760,153}, // A6
+	{   0,153}, // x1
+
+	{1586,204}, // G6
+	{2637,204}, // E7
+	{3136,204}, // G7
+	{3520,153}, // A7
+	{   0,153}, // x1
+	{2794,153}, // F7
+	{3136,153}, // G7
+	{   0,153}, // x1
+	{2637,153}, // E7
+	{   0,153}, // x1
+	{2093,153}, // C7
+	{2349,153}, // D7
+	{1976,153}, // B6
+	{   0,306}, // x2
+
+	{2093,153}, // C7
+	{   0,306}, // x2
+	{1586,153}, // G6
+	{   0,306}, // x2
+	{1319,153}, // E6
+	{   0,306}, // x2
+	{1760,153}, // A6
+	{   0,153}, // x1
+	{1976,153}, // B6
+	{   0,153}, // x1
+	{1865,153}, // AS6
+	{1760,153}, // A6
+	{   0,153}, // x1
+
+	{1586,204}, // G6
+	{2637,204}, // E7
+	{3136,204}, // G7
+	{3520,153}, // A7
+	{   0,153}, // x1
+	{2794,153}, // F7
+	{3136,153}, // G7
+	{   0,153}, // x1
+	{2637,153}, // E7
+	{   0,153}, // x1
+	{2093,153}, // C7
+	{2349,153}, // D7
+	{1976,153}, // B6
+
+	{   0,  0}	// <-- Disable PWM
+};
 
 
 unsigned char obstacle[] = {
@@ -506,7 +589,10 @@ struct bullet{
 
 struct bullet bul[10];
 
+
 void programInit() {
+    Change_Melody(super_mario_bros, ARRAY_LENGTH(super_mario_bros));
+
 	LiquidCrystal(GPIOC, GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_9, GPIO_PIN_8, GPIO_PIN_7);
 	begin(20, 4);
 //    setNumber(1234);
@@ -538,12 +624,12 @@ void programInit() {
 		bul[i].position_y=-1;
 
 	}
-//	init_board();
-
+    PWM_Start();
 
 }
 
 void starter(){
+
 	setCursor(0, 2);
 	write(num_tank_right, tank_right);
 
@@ -631,6 +717,7 @@ void init_board(){
 // D13 -> C8
 // D14 -> C7
 
+
 void update_lcd(){
 	if (game_started==1){
 		clear();
@@ -645,6 +732,25 @@ void update_lcd(){
 
 
 	if(pageflag==2){
+		if(HAL_GetTick() - for30timer > 30000){
+			int col = rand() % 24;
+			int row = rand() % 4;
+			if(lcd[col][row] == 0){
+				lcd[col][row] = num_extra_bullet;
+			}
+			 col = rand() % 24;
+			 row = rand() % 4;
+			if(lcd[col][row] == 0){
+				lcd[col][row] = num_chance;
+			}
+			 col = rand() % 24;
+			 row = rand() % 4;
+			if(lcd[col][row] == 0){
+				lcd[col][row] = num_health;
+			}
+			for30timer = HAL_GetTick();
+
+		}
 		for (int i = 0; i < 20; i++) {
 			for (int j = 0; j < 4; j++) {
 				setCursor(i, j);
@@ -806,6 +912,8 @@ void change_dir(int player){
 }
 
 void boom(int player){
+	 PWM_Change_Tone(1000, 1000);
+
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0); //Temp
 	int i;
 	for(i = 0; i<10;i++){
@@ -828,6 +936,8 @@ void boom(int player){
 		player2.arrow--;
 
 	}
+	 PWM_Change_Tone(1000, 0);
+
 //entesab be array
 
 }

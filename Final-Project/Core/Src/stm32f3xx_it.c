@@ -26,7 +26,11 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN TD */
-
+typedef struct
+{
+    uint16_t frequency;
+    uint16_t duration;
+} Tone;
 /* USER CODE END TD */
 
 /* Private define ------------------------------------------------------------*/
@@ -36,11 +40,23 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+#define ARRAY_LENGTH(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
+extern TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef *pwm_timer = &htim3;	// Point to PWM Timer configured in CubeMX
+uint32_t pwm_channel = TIM_CHANNEL_1;   // Select configured PWM channel number
+
+const Tone *volatile melody_ptr;
+volatile uint16_t melody_tone_count;
+volatile uint16_t current_tone_number;
+volatile uint32_t current_tone_end;
+volatile uint16_t volume = 1000;          // (0 - 1000)
+volatile uint32_t last_button_press;
+
 
 /* USER CODE END PV */
 
@@ -51,7 +67,56 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void PWM_Start()
+{
+    HAL_TIM_PWM_Start(pwm_timer, pwm_channel);
+}
 
+void PWM_Change_Tone(uint16_t pwm_freq, uint16_t volume) // pwm_freq (1 - 20000), volume (0 - 1000)
+{
+    if (pwm_freq == 0 || pwm_freq > 20000)
+    {
+        __HAL_TIM_SET_COMPARE(pwm_timer, pwm_channel, 0);
+    }
+    else
+    {
+        const uint32_t internal_clock_freq = HAL_RCC_GetSysClockFreq();
+        const uint16_t prescaler = 1 + internal_clock_freq / pwm_freq / 60000;
+        const uint32_t timer_clock = internal_clock_freq / prescaler;
+        const uint32_t period_cycles = timer_clock / pwm_freq;
+        const uint32_t pulse_width = volume * period_cycles / 1000 / 2;
+
+        pwm_timer->Instance->PSC = prescaler - 1;
+        pwm_timer->Instance->ARR = period_cycles - 1;
+        pwm_timer->Instance->EGR = TIM_EGR_UG;
+        __HAL_TIM_SET_COMPARE(pwm_timer, pwm_channel, pulse_width); // pwm_timer->Instance->CCR2 = pulse_width;
+    }
+}
+//void Change_Melody(const Tone *melody, uint16_t tone_count)
+
+void Change_Melody(const Tone *melody, uint16_t tone_count)
+{
+
+    melody_ptr = melody;
+    melody_tone_count = tone_count;
+    current_tone_number = 0;
+}
+extern pageflag;
+
+
+void Update_Melody()
+{
+    if ((HAL_GetTick() > current_tone_end) && (current_tone_number < melody_tone_count) && pageflag == 0)
+    {
+        const Tone active_tone = *(melody_ptr + current_tone_number);
+        PWM_Change_Tone(active_tone.frequency, volume);
+        current_tone_end = HAL_GetTick() + active_tone.duration;
+        current_tone_number++;
+        if(current_tone_number == melody_tone_count){
+        	current_tone_number = 0;
+        }
+    }
+}
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -189,7 +254,7 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+ Update_Melody();
   /* USER CODE END SysTick_IRQn 1 */
 }
 
@@ -210,7 +275,12 @@ void EXTI0_IRQHandler(void)
   /* USER CODE END EXTI0_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
+  if (HAL_GetTick() > last_button_press + 200)
+  {
+      last_button_press = HAL_GetTick();
 
+      HAL_GPIO_TogglePin(GPIOE, GPIO_PIN_9);
+  }
   /* USER CODE END EXTI0_IRQn 1 */
 }
 
