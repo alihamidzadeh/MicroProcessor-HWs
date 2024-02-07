@@ -1,75 +1,39 @@
+import threading
 import serial
-import keyboard
+import time
 
-# Change these values as needed
-port = 'ttyUSB'
+port = 'COM6' 
 baudrate = 38400
 
-# Define a dictionary mapping each key to its custom character
-custom_chars = {
-    'A': b'\x41',
-    'B': b'\x42',
-    'C': b'\x43',
-    'D': b'\x44',
-    'E': b'\x45',
-    'F': b'\x46',
-    'G': b'\x47',
-
-    '1': b'\x31',
-    '2': b'\x32',
-    '3': b'\x33',
-    '4': b'\x34',
-    '5': b'\x35',
-    '6': b'\x36',
-    '7': b'\x37',
-}
-
-# Open the serial port
-print("start")
 ser = serial.Serial(port, baudrate)
-# print(ser)
+logfile_path = 'E:\Term 7\MicroProcessor\MicroProcessorLab\Micro_git\MicroProcessor-HWs\Final-Project\output.log'
 
-keyPressed = False
-
-# Define a function to send the custom character for the pressed key over the serial port
-
-
-def send_custom_char(event: keyboard.KeyboardEvent):
-    global keyPressed
-    if not event.name in custom_chars:
-        return
-
-    if event.event_type == 'down':
-        key = event.name
-        if not keyPressed:
-            keyPressed = True
-            ser.write(custom_chars[key])
-            print(custom_chars[key])
-
-    elif event.event_type == 'up':
-        keyPressed = False
+with open(logfile_path, 'w') as logfile:
+    logfile.write("")
 
 
-# Register the function to be called whenever a key is pressed or released
-keyboard.hook(send_custom_char)
+def send_data():
+    while True:
+        data_to_send = input()
+        data_to_send += '\n'
+        ser.write(data_to_send.encode())
+        
 
-# Wait for keyboard input indefinitely
-keyboard.wait()
+def receive_data():
+    while True:
+        received_data = ser.readline().decode().strip()
+        if received_data:
+            print(f"{received_data}")
+            with open(logfile_path, 'a') as logfile:
+                logfile.write(f"{received_data}\n")
 
-#-----------------------------------------------
+send_thread = threading.Thread(target=send_data)
+receive_thread = threading.Thread(target=receive_data)
 
-# import serial
-# import msvcrt
+send_thread.start()
+receive_thread.start()
 
-# # Change these values as needed
-# port = 'COM5' # ttyUSB in Linux
-# baudrate = 38400
+send_thread.join()
+receive_thread.join()
 
-# # Open the serial port
-# ser = serial.Serial(port, baudrate)
-
-# while 1:
-#     input_char = msvcrt.getch()
-#     if input_char == b'\x03': # CTRL + C
-#         break
-#     ser.write(input_char.upper())
+ser.close()

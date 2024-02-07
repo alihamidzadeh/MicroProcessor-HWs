@@ -1,11 +1,11 @@
 #include "main.h"
-//#include <math.h>
-//#include <strings.h>
-//#include <time.h>
-
+#include <math.h>
+#include <strings.h>
+#include <time.h>
 
 int pageflag = 0;
 int menu_curser_r = 1;
+extern UART_HandleTypeDef huart3;
 
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim2;
@@ -593,15 +593,16 @@ struct bullet bul[10];
 void programInit() {
     Change_Melody(super_mario_bros, ARRAY_LENGTH(super_mario_bros));
 
+	char data[100];
+    int n = sprintf(data, "test\n");
+	HAL_UART_Transmit(&huart3, data, n, 1000);
+	uart_rx_enable_it();
+
+
 	LiquidCrystal(GPIOC, GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3, GPIO_PIN_9, GPIO_PIN_8, GPIO_PIN_7);
 	begin(20, 4);
 //    setNumber(1234);
 
-	//temp
-//	char data[100];
-//	int n = sprintf(data, "Salammmmm");
-//	setCursor(5, 1);
-	//	print(data);
 
 
 	set_start_time(20, 20, 20);
@@ -622,7 +623,6 @@ void programInit() {
 		bul[i].player_id=1;
 		bul[i].position_x=-1;
 		bul[i].position_y=-1;
-
 	}
     PWM_Start();
 
@@ -873,7 +873,7 @@ void programLoop() {
 
     update_lcd();
 }
-
+int sev_result = 0;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 	if (htim->Instance == TIM4) {
@@ -886,6 +886,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	}
 	if(htim->Instance == TIM2){
 		test_shelik();
+		sev_result = player2.arrow * 1000 + player2.health * 100 + player1.arrow * 10 + player1.health;
+		setNumber(sev_result);
 	}
 
 }
@@ -912,8 +914,8 @@ void change_dir(int player){
 }
 
 void boom(int player){
-	 PWM_Change_Tone(1000, 1000);
-
+//	PWM_Change_Tone(1000, 1000);
+	if ((player == 1 && player1.arrow > 0)||(player == 2 && player2.arrow > 0)){
 	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_9, 0); //Temp
 	int i;
 	for(i = 0; i<10;i++){
@@ -936,13 +938,14 @@ void boom(int player){
 		player2.arrow--;
 
 	}
-	 PWM_Change_Tone(1000, 0);
-
+//	 PWM_Change_Tone(1000, 0);
+	}
 //entesab be array
+
 
 }
 
-int sev_result = 0;
+//int sev_result = 0;
 void collect(uint8_t pos, int player){
 	if (pos == num_extra_bullet){
 		if (player == 1)
@@ -963,8 +966,8 @@ void collect(uint8_t pos, int player){
 //	int results[4] = {d,c,b,a};
 //	seven_segment_set_num(results);
 
-	sev_result = player2.arrow * 1000 + player2.health * 100 + player1.arrow * 10 + player1.health;
-	setNumber(sev_result);
+//	sev_result = player2.arrow * 1000 + player2.health * 100 + player1.arrow * 10 + player1.health;
+//	setNumber(sev_result);
 }
 
 void test_shelik(){
@@ -1023,10 +1026,6 @@ void test_shelik(){
 				}
 
 			}
-
-
-
-
 			else if(bul[i].direction == 2){
 				if(lcd[bul[i].position_x][bul[i].position_y] == num_arrow){
 					lcd[bul[i].position_x][bul[i].position_y] = 0;
@@ -1256,27 +1255,156 @@ void move(int player){
 char character;
 char input[50];
 int  index_arr = 0;
-extern UART_HandleTypeDef huart1;
 
 void uart_rx_enable_it(void) {
-	HAL_UART_Receive_IT(&huart1, &character, 1);
+	HAL_UART_Receive_IT(&huart3, &character, 1);
 }
 
+
+int mute_flag = 0;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	char data[100];
+    char prefix1[] = "[name1]:";
+    char prefix2[] = "[name2]:";
+    char prefix3[] = "[mute]:";
+    char prefix4[] = "[arrow]:";
+    char prefix5[] = "[health]:";
+    int temp;
 
-    if (huart->Instance == USART1){
+    if (huart->Instance == USART3){
+
     	if(character != 10){
     		input[index_arr++] = character;
     	}else{
-			input[index_arr++] = '\0';
+    		input[index_arr++] = '\0';
 			index_arr = 0;
 			int value;
-			HAL_RTC_GetTime(&hrtc, &mytime, RTC_FORMAT_BIN);
-//			sprintf(timeStr, "%02d:%02d:%02d", mytime.Hours, mytime.Minutes, mytime.Seconds);
+//			HAL_RTC_GetTime(&hrtc, &rtc_time, RTC_FORMAT_BIN);
+//			sprintf(timeStr, "%02d:%02d:%02d", rtc_time.Hours, rtc_time.Minutes, rtc_time.Seconds);
+			if (strncmp(input, prefix1, strlen(prefix1)) == 0){ //name1
+				if (sscanf(input + strlen(prefix1), "%c", &player1.player_name) == 1) {
+					char data[100];
+					int n = sprintf(data, "saved %c \n", player1.player_name);
+					HAL_UART_Transmit(&huart3, data, n, 1000);
+				}
+			}else if (strncmp(input, prefix2, strlen(prefix2)) == 0){ //name2
+				if (sscanf(input + strlen(prefix2), "%c", &player2.player_name) == 1) {
+					char data[100];
+					int n = sprintf(data, "saved %c \n", player2.player_name);
+					HAL_UART_Transmit(&huart3, data, n, 1000);
+				}
+			}else if (strncmp(input, prefix3, strlen(prefix3)) == 0){ //name2
+				if (sscanf(input + strlen(prefix3), "%d", &temp) == 1) {
+					if (temp >= 0 && temp <=1){
+						mute_flag = temp;
+						char data[100];
+						int n = sprintf(data, "mute: %d\n", mute_flag);
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}else{
+						char data[100];
+						int n = sprintf(data, "Error mute flag\n");
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}
+				}
+			}else if (strncmp(input, prefix4, strlen(prefix4)) == 0){ //name2
+				if (sscanf(input + strlen(prefix4), "%d", &temp) == 1) {
+					if (temp >= 1 && temp <= 9){
+						player1.arrow = temp;
+						player2.arrow = temp;
+						char data[100];
+						int n = sprintf(data, "Arrow number is: %d\n", temp);
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}else{
+						char data[100];
+						int n = sprintf(data, "Error arrow number\n");
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}
+				}
+			}else if (strncmp(input, prefix5, strlen(prefix5)) == 0){ //name2
+				if (sscanf(input + strlen(prefix5), "%d", &temp) == 1) {
+					if (temp >= 1 && temp <= 9){
+						player1.health = temp;
+						player2.health = temp;
+						char data[100];
+						int n = sprintf(data, "Health number is: %d\n", temp);
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}else{
+						char data[100];
+						int n = sprintf(data, "Error health number\n");
+						HAL_UART_Transmit(&huart3, data, n, 1000);
+					}
+				}
+			}else{
+				int n = sprintf(data, "[ERR] Not valid\n");
+				HAL_UART_Transmit(&huart3, data, n, 1000);
+			}
+//				}else{
+//					int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
+//					HAL_UART_Transmit(&huart3, data, n, 1000);
+//				}
+//			}else if (strncmp(input, prefix2, strlen(prefix2)) == 0){ //LIGHTS
+//				if (sscanf(input + strlen(prefix2), "%d", &value) == 1) {
+//					if (value >= 1 && value <= 4){
+//						int n;
+//						if (numbers[1]>value)
+//							n = sprintf(data, "[INFO] %s LIGHTS decreased\n", timeStr);
+//						else
+//							n = sprintf(data, "[INFO] %s LIGHTS increased\n", timeStr);
+//						numbers[1]=value;
+//						HAL_UART_Transmit(&huart3, data, n, 1000);
+//					}else{
+//						int n = sprintf(data, "[ERR] %s Not valid range of number\n", timeStr);
+//						HAL_UART_Transmit(&huart3, data, n, 1000);
+//					}
+//				}else{
+//					int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
+//					HAL_UART_Transmit(&huart3, data, n, 1000);
+//				}
+//			}else if (strncmp(input, prefix3, strlen(prefix3)) == 0){ //WARNNUM
+//				if (sscanf(input + strlen(prefix3), "%d", &value) == 1) {
+//					if (value >= 1 && value <= 3){
+//						int n;
+//						if (numbers[2]>value)
+//							n = sprintf(data, "[INFO] %s WARNNUM decreased\n", timeStr);
+//						else
+//							n = sprintf(data, "[INFO] %s WARNNUM increased\n", timeStr);
+//						numbers[2]=value;
+//						HAL_UART_Transmit(&huart3, data, n, 1000);
+//					}else{
+//						int n = sprintf(data, "[ERR] %s Not valid range of number\n", timeStr);
+//						HAL_UART_Transmit(&huart3, data, n, 1000);
+//					}
+//				}else{
+//					int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
+//					HAL_UART_Transmit(&huart3, data, n, 1000);
+//				}
+//			}else if (strncmp(input, prefix4, strlen(prefix4)) == 0){ //Time
+//				int hour;
+//				int minute;
+//				int second;
+//				if (sscanf(input + strlen(prefix4), "%2d:%2d:%2d", &hour, &minute, &second) == 3) {
+////					set_start_time(hour,minute,second);
+//					RTC_TimeTypeDef start_t ;
+//					start_t.Hours = hour;
+//					start_t.Minutes = minute;
+//					start_t.Seconds = second;
+//
+//					HAL_RTC_SetTime(&hrtc, &start_t, RTC_FORMAT_BIN);
+//
+//					int n = sprintf(data, "[INFO] Time set to %02d:%02d:%02d\n", hour, minute, second);
+//					HAL_UART_Transmit(&huart3, data, n, 1000);
+//				}else{
+//					int n = sprintf(data, "[ERR] Not valid Time\n");
+//					HAL_UART_Transmit(&huart3, data, n, 1000);
+//				}
+//			}else{											//Others
+//				int n = sprintf(data, "[ERR] %s Not valid Value\n", timeStr);
+//				HAL_UART_Transmit(&huart3, data, n, 1000);
+//			}
+//			}
 		}
+    	}
 		uart_rx_enable_it();
-    }
 }
 
 
