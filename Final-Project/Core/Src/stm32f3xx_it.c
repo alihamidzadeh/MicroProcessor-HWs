@@ -116,6 +116,10 @@ void Update_Melody()
         	current_tone_number = 0;
         }
     }
+    else if(pageflag != 0){
+        PWM_Change_Tone(1, 0);
+
+    }
 }
 /* USER CODE END 0 */
 

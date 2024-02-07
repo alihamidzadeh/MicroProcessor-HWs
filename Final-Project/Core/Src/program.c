@@ -55,7 +55,7 @@ void set_start_day(int year, int month, int day){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (last_gpio_exti + 70 > HAL_GetTick()) // Simple button debouncing
+  if (last_gpio_exti + 200 > HAL_GetTick()) // Simple button debouncing
   {
     return;
   }
@@ -180,6 +180,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				change_page = 1;
 				game_started = 1;
 				for30timer = HAL_GetTick();
+				PWM_Change_Tone(0, 0);
+
 			}
 			else if(menu_curser_r == 2){
 				pageflag = 3;
@@ -594,7 +596,7 @@ void programInit() {
     Change_Melody(super_mario_bros, ARRAY_LENGTH(super_mario_bros));
 
 	char data[100];
-    int n = sprintf(data, "test\n");
+    int n = sprintf(data, "Game init\n");
 	HAL_UART_Transmit(&huart3, data, n, 1000);
 	uart_rx_enable_it();
 
@@ -659,6 +661,7 @@ void starter(){
 
 void init_board(){
 	//i == soton, j ==> radif
+	PWM_Change_Tone(1, 0);
 
     for (int i = 0; i < 20; i++) {
         for (int j = 0; j < 4; j++) {
@@ -988,7 +991,7 @@ void collect(uint8_t pos, int player){
 //	sev_result = player2.arrow * 1000 + player2.health * 100 + player1.arrow * 10 + player1.health;
 //	setNumber(sev_result);
 }
-
+int gameEnd = 0;
 void test_shelik(){
 	for(int i = 0; i<10;i++){
 		if(bul[i].active==1){
@@ -1020,15 +1023,17 @@ void test_shelik(){
 				else if(next_element == num_tank_down || next_element == num_tank_left || next_element == num_tank_right || next_element == num_tank_up){
 					if(bul[i].player_id == 1){
 						player2.health--;
-						if(player2.health==0){
-								endgame();
-							}
+						if(player2.health==0 && gameEnd == 0){
+							gameEnd =1;
+							endgame(1);
+						}
 						player1.points++;
 					}
 					else{
 						player1.health--;
-						if(player1.health==0){
-							endgame();
+						if(player1.health==0 && gameEnd == 0){
+							gameEnd =1;
+							endgame(2);
 						}
 						player2.points++;
 					}
@@ -1177,13 +1182,24 @@ void test_shelik(){
 		}
 	}
 }
-void endgame(){
-	if(player1.points > player2.points){
+void endgame(int won){
+
+	if(won == 1){
+		char data [100];
+
+		int n = sprintf(data, "Player:%c Won\n", player1.player_name);
+		HAL_UART_Transmit(&huart3, data, n, HAL_MAX_DELAY);
 
 	}
 	else{
+		char data [100];
+
+		int n = sprintf(data, "Player:%c Won\n", player2.player_name);
+		HAL_UART_Transmit(&huart3, data, n, HAL_MAX_DELAY);
 
 	}
+
+
 }
 
 
@@ -1312,7 +1328,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 					int n = sprintf(data, "saved %c \n", player2.player_name);
 					HAL_UART_Transmit(&huart3, data, n, 1000);
 				}
-			}else if (strncmp(input, prefix3, strlen(prefix3)) == 0){ //name2
+			}else if (strncmp(input, prefix3, strlen(prefix3)) == 0){ //mute
 				if (sscanf(input + strlen(prefix3), "%d", &temp) == 1) {
 					if (temp >= 0 && temp <=1){
 						mute_flag = temp;
@@ -1325,7 +1341,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}
 				}
-			}else if (strncmp(input, prefix4, strlen(prefix4)) == 0){ //name2
+			}else if (strncmp(input, prefix4, strlen(prefix4)) == 0){ //arrow
 				if (sscanf(input + strlen(prefix4), "%d", &temp) == 1) {
 					if (temp >= 1 && temp <= 9){
 						player1.arrow = temp;
@@ -1339,7 +1355,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 						HAL_UART_Transmit(&huart3, data, n, 1000);
 					}
 				}
-			}else if (strncmp(input, prefix5, strlen(prefix5)) == 0){ //name2
+			}else if (strncmp(input, prefix5, strlen(prefix5)) == 0){ //health
 				if (sscanf(input + strlen(prefix5), "%d", &temp) == 1) {
 					if (temp >= 1 && temp <= 9){
 						player1.health = temp;
