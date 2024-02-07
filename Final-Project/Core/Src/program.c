@@ -810,8 +810,27 @@ void about_page(){
 }
 
 void setting_page(){
-	setCursor(6, 1);
-	print("KHALI");
+
+
+	char data[40];
+	int n = sprintf(data, "Health: %d", player2.health);
+
+	setCursor(0, 0);
+	print(data);
+	setCursor(0, 1);
+	char data1[40];
+	n = sprintf(data1, "Arrow: %d", player2.arrow);
+	print(data1);
+	setCursor(0, 2);
+	char data2[40];
+	n = sprintf(data2, "Player1: %c", player1.player_name);
+
+	print(data2);
+
+	setCursor(0, 3);
+	char data3[40];
+	n = sprintf(data3, "Player2: %c", player2.player_name);
+	print(data3);
 
 }
 //void remove_starter(){

@@ -6,7 +6,7 @@ port = 'COM6'
 baudrate = 38400
 
 ser = serial.Serial(port, baudrate)
-logfile_path = 'E:\Term 7\MicroProcessor\MicroProcessorLab\Micro_git\MicroProcessor-HWs\Final-Project\output.log'
+logfile_path = 'D:\\University\\uniSemersters\\semester7\\MicroContorolers\\Lab\\final_project\\MicroProcessor-HWs\\Final-Project\\output.log'
 
 with open(logfile_path, 'w') as logfile:
     logfile.write("")
